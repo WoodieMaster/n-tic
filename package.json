@@ -1,0 +1,14 @@
+{
+  "name": "ticatactoe",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "frontend": "pnpm run --dir frontend dev",
+    "backend": "pnpm run --dir backend start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.24.0"
+}
