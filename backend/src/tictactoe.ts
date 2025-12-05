@@ -23,7 +23,7 @@ export class Board {
         let result = 0;
         let multiplier = 1;
 
-        for(const dimPos of pos) {
+        for (const dimPos of pos) {
             result += dimPos * multiplier;
             multiplier *= this.sideLength;
         }
@@ -53,13 +53,13 @@ export class Board {
 
         console.assert(expectedCell !== BoardCellEmpty, "Changed cell is empty");
 
-        outer: while(true) {
+        outer: while (true) {
             // go through all possible directions
             let newCheckVec = getNextCheckVector(checkVec);
 
-            if(newCheckVec === null) break; // all vecs checked
+            if (newCheckVec === null) break; // all vecs checked
 
-            if(!checkVectorIsOnFullDiagonal(newCheckVec, changedPosition, this.sideLength)) continue;
+            if (!checkVectorIsOnFullDiagonal(newCheckVec, changedPosition, this.sideLength)) continue;
             checkVec = newCheckVec;
 
             // Direction valid for win
@@ -67,13 +67,13 @@ export class Board {
 
             let checkStartPosition = changedPosition
                 .map((v, i) => {
-                    if(checkVec[i] === 1) return 0;
-                    if(checkVec[i] === -1) return this.sideLength - 1;
+                    if (checkVec[i] === 1) return 0;
+                    if (checkVec[i] === -1) return this.sideLength - 1;
                     return v
                 });
 
-            for(let i = 0; i < this.sideLength; i++) {
-                if(this.getCell(addVector(checkStartPosition, checkVec)) !== expectedCell) {
+            for (let i = 0; i < this.sideLength; i++) {
+                if (this.getCell(addVector(checkStartPosition, checkVec)) !== expectedCell) {
                     // Direction contains different cell
                     continue outer;
                 }
@@ -97,11 +97,11 @@ function checkVectorIsOnFullDiagonal(vec: BoardVec, position: BoardPosition, sid
     console.assert(vec.length === position.length, "vector and position do not have the same length");
     let expectedEdgeDistance = null;
 
-    for(let i = 1; i < vec.length; i++) {
-        if(vec[i] === 0) continue;
+    for (let i = 1; i < vec.length; i++) {
+        if (vec[i] === 0) continue;
         const edgeDistance = calculateEdgeDistance(sidelength, position[i]!);
-        if(expectedEdgeDistance === null) expectedEdgeDistance = edgeDistance;
-        else if(expectedEdgeDistance !== edgeDistance) {
+        if (expectedEdgeDistance === null) expectedEdgeDistance = edgeDistance;
+        else if (expectedEdgeDistance !== edgeDistance) {
             return false;
         }
     }
@@ -109,12 +109,12 @@ function checkVectorIsOnFullDiagonal(vec: BoardVec, position: BoardPosition, sid
 }
 
 function calculateEdgeDistance(sidelength: number, pos: number): number {
-    return Math.min(pos, pos - sidelength -1);
+    return Math.min(pos, pos - sidelength - 1);
 }
 
 function addVector(pos: BoardPosition, vec: BoardVec): BoardPosition {
     console.assert(vec.length === pos.length, "vector and position do not have the same length");
-    for(let i = 0; i < vec.length; i++) {
+    for (let i = 0; i < vec.length; i++) {
         pos[i]! += vec[i]!;
     }
 
@@ -125,54 +125,45 @@ function getNextCheckVector(vec: BoardVec): BoardVec | null {
     // FIXME :) Generates twice the required vectors, just dont care to fix it right now :/
     let dimCount = 0;
     // Go through every combination of -1 and 1
-    for(let i = 0; i < vec.length; i++) {
-        if(vec[i] === -1) {
+    for (let i = 0; i < vec.length; i++) {
+        if (vec[i] === -1) {
             vec[i] = 1;
-            // console.log(`${i} to 1`);
             return vec;
         }
-        if(vec[i] === 1) {
+        if (vec[i] === 1) {
             vec[i] = -1;
             dimCount++;
         }
     }
     // -1 and 1 combinations completed
 
-    // console.log(`shift required`);
-
     // find all end aligned dimensions
     let resetIdx;
-    for(resetIdx = vec.length - 1; resetIdx >= 0; resetIdx--) {
-        if(vec[resetIdx] === 0) break;
+    for (resetIdx = vec.length - 1; resetIdx >= 0; resetIdx--) {
+        if (vec[resetIdx] === 0) break;
         vec[resetIdx] = 0;
     }
 
-    // console.log(`resetIdx: ${resetIdx}`);
-
     // find next used dimension
     let shiftedIdx;
-    for(shiftedIdx = resetIdx-1; shiftedIdx >= 0; shiftedIdx--) {
-        if(vec[shiftedIdx] != 0) {
+    for (shiftedIdx = resetIdx - 1; shiftedIdx >= 0; shiftedIdx--) {
+        if (vec[shiftedIdx] != 0) {
             vec[shiftedIdx] = 0;
             break;
         }
     }
 
-    // console.log(`shiftIdx: ${shiftedIdx}`);
 
-
-    if(shiftedIdx >= 0) {
+    if (shiftedIdx >= 0) {
         // insert part of dimension shifting
-        // console.log(`shifting dimensions`);
-        vec.fill(-1, shiftedIdx+1, shiftedIdx+1 + vec.length-resetIdx);
+        vec.fill(-1, shiftedIdx + 1, shiftedIdx + 1 + vec.length - resetIdx);
         return vec;
     }
     // all dimensions shifted to end
-    // console.log(`already fully shifted, increasing used dimension count`);
 
     // increase used dimension count
     dimCount++;
-    if(dimCount <= vec.length) return vec.map((_, i) => i < dimCount? -1: 0);
+    if (dimCount <= vec.length) return vec.map((_, i) => i < dimCount ? -1 : 0);
 
     // all dimensions counts completed
 
