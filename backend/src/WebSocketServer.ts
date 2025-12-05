@@ -1,6 +1,7 @@
 import {WebSocketServer as WSS, WebSocket} from "ws";
 import {randomBytes} from "node:crypto";
 import type {User, WsClientMessage, WsServerMessage} from "../../shared/types.d.ts";
+import logger from "./logger.ts";
 
 export type Client = {
     /**
@@ -17,7 +18,7 @@ export class WebSocketServer {
 
     constructor(port: number) {
         this.wss = new WSS({port});
-        console.log(`Websocket server listening on port ${port}`);
+        logger.info(`Websocket server listening on port ${port}`);
 
         this.wss.on('connection', socket => this.connect(socket))
     }
@@ -34,7 +35,7 @@ export class WebSocketServer {
                 name: "",
             }
         } satisfies Client;
-        console.log(`Client connected: ${userId}`);
+        logger.debug(`Client connected: ${userId}`);
 
         this.broadcast({
             type: "join",
@@ -47,9 +48,9 @@ export class WebSocketServer {
         })
 
         socket.on("close", () => {
-            console.log(`Client disconnected: ${userId}`);
+            logger.debug(`Client disconnected: ${userId}`);
             this.clients.delete(userId);
-            console.log(`Remaining clients: ${this.clients.size}`)
+            logger.debug(`Remaining clients: ${this.clients.size}`)
         })
     }
 
@@ -62,12 +63,12 @@ export class WebSocketServer {
     }
 
     handleMessage(data: string, client: Client) {
-        console.log("Received message", data);
+        logger.debug("Received message", data);
         try {
             const msg: WsClientMessage = JSON.parse(data);
             if (msg === null) return;
         } catch (err) {
-            console.error("Invalid message: ", err);
+            logger.error("Invalid message: ", err);
         }
     }
 }
