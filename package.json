@@ -1,5 +1,5 @@
 {
-  "name": "ticatactoe",
+  "name": "n-tic",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -9,6 +9,6 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "packageManager": "pnpm@10.24.0"
 }
