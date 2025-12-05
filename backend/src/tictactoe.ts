@@ -1,5 +1,6 @@
 import type {BoardCell, BoardPosition, BoardVec} from "../../shared/types.d.ts";
 import {BoardCellEmpty} from "../../shared/board.ts";
+import * as assert from "node:assert";
 
 export class Board {
     board: Uint8Array;
@@ -15,7 +16,7 @@ export class Board {
     }
 
     #assertPos(pos: BoardPosition) {
-        console.assert(pos.length === this.dimensions, "Invalid dimension count in position")
+        assert.equal(pos.length, this.dimensions, "Invalid dimension count in position");
     }
 
     #posToIdx(pos: number[]) {
@@ -38,12 +39,12 @@ export class Board {
     }
 
     setCell(pos: BoardPosition, value: BoardCell) {
-        console.assert(this.inBound(pos), "Position out of bounds");
+        assert.ok(this.inBound(pos), "Position out of bounds");
         this.board[this.#posToIdx(pos)] = value;
     }
 
     getCell(pos: BoardPosition) {
-        console.assert(this.inBound(pos), "Position out of bounds");
+        assert.ok(this.inBound(pos), "Position out of bounds");
         return this.board[this.#posToIdx(pos)] as BoardCell;
     }
 
@@ -51,7 +52,7 @@ export class Board {
         let checkVec: BoardVec = [...this.emptyPos];
         let expectedCell = this.getCell(changedPosition);
 
-        console.assert(expectedCell !== BoardCellEmpty, "Changed cell is empty");
+        assert.notEqual(expectedCell, BoardCellEmpty, "Changed cell is empty");
 
         outer: while (true) {
             // go through all possible directions
@@ -94,7 +95,7 @@ export class Board {
  * @param sidelength
  */
 function checkVectorIsOnFullDiagonal(vec: BoardVec, position: BoardPosition, sidelength: number): boolean {
-    console.assert(vec.length === position.length, "vector and position do not have the same length");
+    assert.equal(vec.length, position.length, "vector and position do not have the same length");
     let expectedEdgeDistance = null;
 
     for (let i = 1; i < vec.length; i++) {
@@ -113,7 +114,7 @@ function calculateEdgeDistance(sidelength: number, pos: number): number {
 }
 
 function addVector(pos: BoardPosition, vec: BoardVec): BoardPosition {
-    console.assert(vec.length === pos.length, "vector and position do not have the same length");
+    assert.equal(vec.length === pos.length, "vector and position do not have the same length");
     for (let i = 0; i < vec.length; i++) {
         pos[i]! += vec[i]!;
     }
