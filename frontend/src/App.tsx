@@ -1,16 +1,26 @@
 import {BrowserRouter, Route, Routes} from "react-router";
 import Home from "./pages/Home.tsx";
 import Game from "./pages/Game.tsx";
+import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+
+const darkTheme = createTheme({
+    palette: {
+        mode: "dark",
+    }
+})
 
 function App() {
 
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" Component={Home} />
-                <Route path="/game" Component={Game} />
-            </Routes>
-        </BrowserRouter>
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline/>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/" Component={Home}/>
+                    <Route path="/game" Component={Game}/>
+                </Routes>
+            </BrowserRouter>
+        </ThemeProvider>
     )
 }
 

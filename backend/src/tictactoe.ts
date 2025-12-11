@@ -162,7 +162,7 @@ function getNextCheckVector(vec: BoardVec): BoardVec | null {
     }
     // all dimensions shifted to end
 
-    // increase used dimension count
+    // increase used dimension count++
     dimCount++;
     if (dimCount <= vec.length) return vec.map((_, i) => i < dimCount ? -1 : 0);
 

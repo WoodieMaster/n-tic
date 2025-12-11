@@ -1,3 +1,5 @@
+import {colors, type shapes} from "./shapes.js";
+
 export type WsServerMessage = {
     type: "playerJoin",
     playerName: string,
@@ -14,12 +16,9 @@ export type WsServerMessage = {
     type: "nextTurn",
     nextPlayer: string,
     board: BoardCell[]
-} | {
+} | ({
     type: "roomSettings",
-    dimensionCount?: number,
-    sideLength?: number,
-    playerShapes?: Record<string, Shape>,
-} | {
+} & Partial<RoomSettings>) | {
     type: "gameEnd",
     winner: string,
     board: BoardCell[],
@@ -71,4 +70,10 @@ export type BoardCell = 0 | 1 | 2;
 export type BoardVec = (-1 | 0 | 1)[];
 export type BoardPosition = number[];
 
-export type Shape = "cross" | "circle" | "square" | "triangle"
+export type Shape = { type: typeof shapes[number], color: typeof colors[number]}
+
+export interface RoomSettings {
+    dimensionCount: number,
+    sideLength: number,
+    playerShapes: Shape[]
+}
