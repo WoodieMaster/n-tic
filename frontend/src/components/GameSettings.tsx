@@ -1,11 +1,13 @@
-import {Box, Stack} from "@mui/material";
+import {
+    Stack,
+} from "@mui/material";
 import type {RoomSettings} from "../../../shared/types";
-import ShapeRender from "./ShapeRender.tsx";
 import SettingSlider from "./SettingSlider.tsx";
+import ShapeSelector from "./ShapeSelector.tsx";
 
 interface Props {
     settings: RoomSettings,
-    players: string[]
+    players: string[],
 }
 
 const GameSettings = (p: Props) => {
@@ -14,7 +16,12 @@ const GameSettings = (p: Props) => {
             <SettingSlider label={"Dimensions"} defaultValue={p.settings.dimensionCount} min={2} max={10}/>
             <SettingSlider label={"Length"} defaultValue={p.settings.sideLength} min={3} max={10}/>
             <Stack spacing={2} sx={{bgcolor: "rgba(0,0,0,0.1)", height: "100%", padding: 3}}>
-                {p.settings.playerShapes.map((s) => <Box><ShapeRender shape={s} mode={"2D"} size={"50px"}/></Box>)}
+                {p.players.map((playerName, playerIdx) =>
+                    <ShapeSelector
+                        key={playerIdx}
+                        defaultValue={p.settings.playerShapes[playerIdx]}
+                        playerName={playerName}
+                    />)}
             </Stack>
         </Stack>
     );
