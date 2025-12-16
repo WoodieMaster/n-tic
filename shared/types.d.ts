@@ -24,8 +24,8 @@ export type WsServerMessage = {
     board: BoardCell[],
     reason: {
         type: "board",
-        winVec: BoardVec,
-        winPosition: BoardPosition
+        winVec: BoardDirection,
+        winPosition: BoardVector
     } | {
         type: "opponentsDisconnected"
     }
@@ -57,7 +57,7 @@ export type WsClientMessage = {
     type: "startGame"
 } | {
     type: "place",
-    position: BoardPosition
+    position: BoardVector
 }
 
 export interface User {
@@ -65,10 +65,11 @@ export interface User {
     name: string
 }
 
-export type BoardCell = 0 | 1 | 2;
+export type FilledBoardCell = 1 | 2;
+export type BoardCell = FilledBoardCell | undefined;
 
-export type BoardVec = (-1 | 0 | 1)[];
-export type BoardPosition = number[];
+export type BoardDirection = (-1 | 0 | 1)[];
+export type BoardVector = number[];
 
 export type Shape = { type: typeof shapes[number], color: typeof colors[number]}
 
@@ -77,3 +78,5 @@ export interface RoomSettings {
     sideLength: number,
     playerShapes: Shape[]
 }
+
+export type Board = {[K: string]: BoardCell}

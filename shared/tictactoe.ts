@@ -1,55 +1,56 @@
-import type {BoardCell, BoardPosition, BoardVec} from "../../shared/types.d.ts";
-import {BoardCellEmpty} from "../../shared/board.ts";
+import type {Board, BoardCell, BoardVector, BoardDirection, FilledBoardCell} from "./types.d.ts";
 import * as assert from "node:assert";
 
-export class Board {
-    board: Uint8Array;
+export const BoardCellEmpty = undefined satisfies BoardCell;
+export const BoardCellPlayer1 = 1 satisfies BoardCell;
+export const BoardCellPlayer2 = 2 satisfies BoardCell;
+
+export class BoardHandler {
+    board: Board;
     readonly dimensions: number;
     readonly sideLength: number;
-    readonly emptyPos: BoardVec;
+    readonly emptyPos: BoardDirection;
 
-    constructor(dimensions: number, sideLength: number) {
+    constructor(dimensions: number, sideLength: number, board: Board = {}) {
         this.dimensions = dimensions;
         this.sideLength = sideLength;
-        this.board = new Uint8Array(dimensions * sideLength);
+        this.board = board;
         this.emptyPos = new Array(dimensions).fill(0);
     }
 
-    #assertPos(pos: BoardPosition) {
+    #assertPos(pos: BoardVector) {
         assert.equal(pos.length, this.dimensions, "Invalid dimension count in position");
     }
 
     #posToIdx(pos: number[]) {
         this.#assertPos(pos);
-        let result = 0;
-        let multiplier = 1;
 
-        for (const dimPos of pos) {
-            result += dimPos * multiplier;
-            multiplier *= this.sideLength;
-        }
-
-        return result;
+        return pos.map(n => n.toString(36)).join(",");
     }
 
-    inBound(pos: BoardPosition) {
+    inBound(pos: BoardVector) {
         this.#assertPos(pos);
 
         return pos.every(d => d < this.sideLength);
     }
 
-    setCell(pos: BoardPosition, value: BoardCell) {
+    setCell(pos: BoardVector, value: FilledBoardCell) {
         assert.ok(this.inBound(pos), "Position out of bounds");
         this.board[this.#posToIdx(pos)] = value;
     }
 
-    getCell(pos: BoardPosition) {
+    clearCell(pos: BoardVector) {
+        assert.ok(this.inBound(pos), "Position out of bounds");
+        delete this.board[this.#posToIdx(pos)];
+    }
+
+    getCell(pos: BoardVector) {
         assert.ok(this.inBound(pos), "Position out of bounds");
         return this.board[this.#posToIdx(pos)] as BoardCell;
     }
 
-    checkWinForChangedPosition(changedPosition: BoardPosition): BoardCell {
-        let checkVec: BoardVec = [...this.emptyPos];
+    checkWinForChangedPosition(changedPosition: BoardVector): BoardCell {
+        let checkVec: BoardDirection = [...this.emptyPos];
         let expectedCell = this.getCell(changedPosition);
 
         assert.notEqual(expectedCell, BoardCellEmpty, "Changed cell is empty");
@@ -83,7 +84,7 @@ export class Board {
             // Direction has all equal cells -> win
             return expectedCell;
         }
-        return 0;
+        return;
     }
 }
 
@@ -94,7 +95,7 @@ export class Board {
  * @param position
  * @param sidelength
  */
-function checkVectorIsOnFullDiagonal(vec: BoardVec, position: BoardPosition, sidelength: number): boolean {
+function checkVectorIsOnFullDiagonal(vec: BoardDirection, position: BoardVector, sidelength: number): boolean {
     assert.equal(vec.length, position.length, "vector and position do not have the same length");
     let expectedEdgeDistance = null;
 
@@ -113,7 +114,7 @@ function calculateEdgeDistance(sidelength: number, pos: number): number {
     return Math.min(pos, pos - sidelength - 1);
 }
 
-function addVector(pos: BoardPosition, vec: BoardVec): BoardPosition {
+function addVector(pos: BoardVector, vec: BoardDirection): BoardVector {
     assert.equal(vec.length === pos.length, "vector and position do not have the same length");
     for (let i = 0; i < vec.length; i++) {
         pos[i]! += vec[i]!;
@@ -122,7 +123,7 @@ function addVector(pos: BoardPosition, vec: BoardVec): BoardPosition {
     return pos;
 }
 
-function getNextCheckVector(vec: BoardVec): BoardVec | null {
+function getNextCheckVector(vec: BoardDirection): BoardDirection | null {
     // FIXME :) Generates twice the required vectors, just dont care to fix it right now :/
     let dimCount = 0;
     // Go through every combination of -1 and 1
