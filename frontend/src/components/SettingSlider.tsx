@@ -10,7 +10,7 @@ interface Props {
 }
 
 const SettingSlider = (p: Props) => {
-    const [text, setText] = useState("");
+    const [text, setText] = useState(p.defaultValue+"");
     const [value, setValue] = useState(p.defaultValue);
 
     useEffect(() => {
