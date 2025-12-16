@@ -37,10 +37,6 @@ export class WebSocketServer {
         } satisfies Client;
         logger.debug(`Client connected: ${userId}`);
 
-        this.broadcast({
-            type: "join",
-        });
-
         this.clients.set(userId, client);
 
         socket.on("message", data => {
