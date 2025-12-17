@@ -68,8 +68,7 @@ export interface User {
 export type FilledBoardCell = 1 | 2;
 export type BoardCell = FilledBoardCell | undefined;
 
-export type BoardDirection = (-1 | 0 | 1)[];
-export type BoardVector = number[];
+
 
 export type Shape = { type: typeof shapes[number], color: typeof colors[number]}
 

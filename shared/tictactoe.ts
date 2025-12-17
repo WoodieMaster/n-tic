@@ -1,56 +1,55 @@
-import type {Board, BoardCell, BoardVector, BoardDirection, FilledBoardCell} from "./types.d.ts";
+import type {Board, BoardCell, FilledBoardCell} from "./types.d.ts";
 import * as assert from "node:assert";
+import {Vec, type VecDirection} from "./vec.js";
 
 export const BoardCellEmpty = undefined satisfies BoardCell;
-export const BoardCellPlayer1 = 1 satisfies BoardCell;
-export const BoardCellPlayer2 = 2 satisfies BoardCell;
 
 export class BoardHandler {
     board: Board;
     readonly dimensions: number;
     readonly sideLength: number;
-    readonly emptyPos: BoardDirection;
+    readonly emptyPos: VecDirection;
 
     constructor(dimensions: number, sideLength: number, board: Board = {}) {
         this.dimensions = dimensions;
         this.sideLength = sideLength;
         this.board = board;
-        this.emptyPos = new Array(dimensions).fill(0);
+        this.emptyPos = Vec.from(0, sideLength);
     }
 
-    #assertPos(pos: BoardVector) {
-        assert.equal(pos.length, this.dimensions, "Invalid dimension count in position");
+    #assertPos(pos: Vec) {
+        assert.equal(pos.arr.length, this.dimensions, "Invalid dimension count in position");
     }
 
-    #posToIdx(pos: number[]) {
+    #posToIdx(pos: Vec) {
         this.#assertPos(pos);
 
-        return pos.map(n => n.toString(36)).join(",");
+        return pos.arr.map(n => n.toString(36)).join(",");
     }
 
-    inBound(pos: BoardVector) {
+    inBound(pos: Vec) {
         this.#assertPos(pos);
 
-        return pos.every(d => d < this.sideLength);
+        return pos.arr.every(d => d < this.sideLength);
     }
 
-    setCell(pos: BoardVector, value: FilledBoardCell) {
+    setCell(pos: Vec, value: FilledBoardCell) {
         assert.ok(this.inBound(pos), "Position out of bounds");
         this.board[this.#posToIdx(pos)] = value;
     }
 
-    clearCell(pos: BoardVector) {
+    clearCell(pos: Vec) {
         assert.ok(this.inBound(pos), "Position out of bounds");
         delete this.board[this.#posToIdx(pos)];
     }
 
-    getCell(pos: BoardVector) {
+    getCell(pos: Vec) {
         assert.ok(this.inBound(pos), "Position out of bounds");
         return this.board[this.#posToIdx(pos)] as BoardCell;
     }
 
-    checkWinForChangedPosition(changedPosition: BoardVector): BoardCell {
-        let checkVec: BoardDirection = [...this.emptyPos];
+    checkWinForChangedPosition(changedPosition: Vec): BoardCell {
+        let checkVec: VecDirection = this.emptyPos.clone();
         let expectedCell = this.getCell(changedPosition);
 
         assert.notEqual(expectedCell, BoardCellEmpty, "Changed cell is empty");
@@ -67,15 +66,15 @@ export class BoardHandler {
             // Direction valid for win
 
 
-            let checkStartPosition = changedPosition
+            let checkStartPosition = new Vec(changedPosition.arr
                 .map((v, i) => {
-                    if (checkVec[i] === 1) return 0;
-                    if (checkVec[i] === -1) return this.sideLength - 1;
+                    if (checkVec.arr[i] === 1) return 0;
+                    if (checkVec.arr[i] === -1) return this.sideLength - 1;
                     return v
-                });
+                }));
 
             for (let i = 0; i < this.sideLength; i++) {
-                if (this.getCell(addVector(checkStartPosition, checkVec)) !== expectedCell) {
+                if (this.getCell(checkStartPosition.add(checkVec)) !== expectedCell) {
                     // Direction contains different cell
                     continue outer;
                 }
@@ -95,13 +94,13 @@ export class BoardHandler {
  * @param position
  * @param sidelength
  */
-function checkVectorIsOnFullDiagonal(vec: BoardDirection, position: BoardVector, sidelength: number): boolean {
-    assert.equal(vec.length, position.length, "vector and position do not have the same length");
+function checkVectorIsOnFullDiagonal(vec: VecDirection, position: Vec, sidelength: number): boolean {
+    assert.equal(vec.arr.length, position.arr.length, "vector and position do not have the same length");
     let expectedEdgeDistance = null;
 
-    for (let i = 1; i < vec.length; i++) {
-        if (vec[i] === 0) continue;
-        const edgeDistance = calculateEdgeDistance(sidelength, position[i]!);
+    for (let i = 1; i < vec.arr.length; i++) {
+        if (vec.arr[i] === 0) continue;
+        const edgeDistance = calculateEdgeDistance(sidelength, position.arr[i]!);
         if (expectedEdgeDistance === null) expectedEdgeDistance = edgeDistance;
         else if (expectedEdgeDistance !== edgeDistance) {
             return false;
@@ -114,26 +113,17 @@ function calculateEdgeDistance(sidelength: number, pos: number): number {
     return Math.min(pos, pos - sidelength - 1);
 }
 
-function addVector(pos: BoardVector, vec: BoardDirection): BoardVector {
-    assert.equal(vec.length === pos.length, "vector and position do not have the same length");
-    for (let i = 0; i < vec.length; i++) {
-        pos[i]! += vec[i]!;
-    }
-
-    return pos;
-}
-
-function getNextCheckVector(vec: BoardDirection): BoardDirection | null {
+function getNextCheckVector(vec: VecDirection): VecDirection | null {
     // FIXME :) Generates twice the required vectors, just dont care to fix it right now :/
     let dimCount = 0;
     // Go through every combination of -1 and 1
-    for (let i = 0; i < vec.length; i++) {
-        if (vec[i] === -1) {
-            vec[i] = 1;
+    for (let i = 0; i < vec.arr.length; i++) {
+        if (vec.arr[i] === -1) {
+            vec.arr[i] = 1;
             return vec;
         }
-        if (vec[i] === 1) {
-            vec[i] = -1;
+        if (vec.arr[i] === 1) {
+            vec.arr[i] = -1;
             dimCount++;
         }
     }
@@ -141,16 +131,16 @@ function getNextCheckVector(vec: BoardDirection): BoardDirection | null {
 
     // find all end aligned dimensions
     let resetIdx;
-    for (resetIdx = vec.length - 1; resetIdx >= 0; resetIdx--) {
-        if (vec[resetIdx] === 0) break;
-        vec[resetIdx] = 0;
+    for (resetIdx = vec.arr.length - 1; resetIdx >= 0; resetIdx--) {
+        if (vec.arr[resetIdx] === 0) break;
+        vec.arr[resetIdx] = 0;
     }
 
     // find next used dimension
     let shiftedIdx;
     for (shiftedIdx = resetIdx - 1; shiftedIdx >= 0; shiftedIdx--) {
-        if (vec[shiftedIdx] != 0) {
-            vec[shiftedIdx] = 0;
+        if (vec.arr[shiftedIdx] != 0) {
+            vec.arr[shiftedIdx] = 0;
             break;
         }
     }
@@ -158,14 +148,14 @@ function getNextCheckVector(vec: BoardDirection): BoardDirection | null {
 
     if (shiftedIdx >= 0) {
         // insert part of dimension shifting
-        vec.fill(-1, shiftedIdx + 1, shiftedIdx + 1 + vec.length - resetIdx);
+        vec.arr.fill(-1, shiftedIdx + 1, shiftedIdx + 1 + vec.arr.length - resetIdx);
         return vec;
     }
     // all dimensions shifted to end
 
     // increase used dimension count++
     dimCount++;
-    if (dimCount <= vec.length) return vec.map((_, i) => i < dimCount ? -1 : 0);
+    if (dimCount <= vec.arr.length) return new Vec(vec.arr.map((_, i) => i < dimCount ? -1 : 0));
 
     // all dimensions counts completed
 
