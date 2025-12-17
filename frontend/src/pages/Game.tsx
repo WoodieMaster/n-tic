@@ -6,10 +6,14 @@ import BoardView from "../components/BoardView.tsx";
 import {BoardHandler} from "../../../shared/tictactoe.ts";
 import {useState} from "react";
 import {repeat} from "../../../shared/util.ts";
-const boardHandler = new BoardHandler(3,2);
+
+const boardHandler = new BoardHandler(3, 2);
 
 const Game = () => {
-    const [gameViewCount, setGameViewCount] = useState(4);
+    const [gameViewCount, setGameViewCount] = useState(2);
+    const viewCols = Math.ceil(Math.sqrt(gameViewCount));
+    const viewRows = Math.ceil(gameViewCount / viewCols);
+
     return (
         <Stack sx={{width: "100%", height: "100%"}}>
             <Box sx={{flex: 1}}>
@@ -18,7 +22,13 @@ const Game = () => {
             <Box sx={{width: "100%", height: "100%"}}>
                 <PanelGroup direction={"horizontal"} autoSaveId="gamePanelStructure">
                     <Panel>
-                        <Box sx={{display: "grid", height: "100%", overflow: "hidden", gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(gameViewCount))}, 1fr)`, gridTemplateRows: `repeat(${Math.ceil(Math.sqrt(gameViewCount))}, 1fr)`}}>
+                        <Box sx={{
+                            display: "grid",
+                            height: "100%",
+                            overflow: "hidden",
+                            gridTemplateColumns: `repeat(${viewCols}, 1fr)`,
+                            gridTemplateRows: `repeat(${viewRows}, 1fr)`
+                        }}>
                             {repeat(i => <BoardView key={i} boardHandler={boardHandler}/>, gameViewCount)}
                         </Box>
                     </Panel>
