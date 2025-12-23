@@ -21,3 +21,19 @@ export function repeat<T>(fn: (idx: number) => T, start: number, end?: number, s
         }
     }
 }
+
+export function repeat_v<T>(value: T, count: number): Iterable<T> {
+    return {
+        [Symbol.iterator]: function* () {
+            for(let i = 0; i < count; i++) {
+                yield value;
+            }
+        }
+    }
+}
+
+export function* map<Input, Result>(data: Iterable<Input>, fn: (item: Input) => Result) {
+    for(const el of data) {
+        yield fn(el);
+    }
+}

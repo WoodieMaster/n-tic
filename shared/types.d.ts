@@ -65,9 +65,7 @@ export interface User {
     name: string
 }
 
-export type FilledBoardCell = 1 | 2;
-export type BoardCell = FilledBoardCell | undefined;
-
+export type Tuple<Item, Length extends number> = [Item, ...Item[]] & { length: Length };
 
 
 export type Shape = { type: typeof shapes[number], color: typeof colors[number]}
@@ -78,4 +76,4 @@ export interface RoomSettings {
     playerShapes: Shape[]
 }
 
-export type Board = {[K: string]: BoardCell}
+export type Board = {[K: string]: number|undefined}
