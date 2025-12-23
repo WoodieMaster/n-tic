@@ -1,8 +1,6 @@
-import type {Board, BoardCell, FilledBoardCell} from "./types.d.ts";
-import * as assert from "node:assert";
+import type {Board} from "./types.d.ts";
 import {Vec, type VecDirection} from "./vec.js";
 
-export const BoardCellEmpty = undefined satisfies BoardCell;
 
 export class BoardHandler {
     board: Board;
@@ -18,13 +16,9 @@ export class BoardHandler {
     }
 
     #assertPos(pos: Vec) {
-        assert.equal(pos.arr.length, this.dimensions, "Invalid dimension count in position");
-    }
-
-    #posToIdx(pos: Vec) {
-        this.#assertPos(pos);
-
-        return pos.arr.map(n => n.toString(36)).join(",");
+        if (pos.arr.length !== this.dimensions) {
+            throw "Invalid dimension count in position";
+        }
     }
 
     inBound(pos: Vec) {
@@ -33,26 +27,37 @@ export class BoardHandler {
         return pos.arr.every(d => d < this.sideLength);
     }
 
-    setCell(pos: Vec, value: FilledBoardCell) {
-        assert.ok(this.inBound(pos), "Position out of bounds");
-        this.board[this.#posToIdx(pos)] = value;
+    #assertBounds(pos: Vec) {
+        if (!this.inBound(pos)) {
+            throw "Position out of bounds"
+        }
+    }
+
+    #assertFilledCell(pos: Vec) {
+        if (this.getCell(pos) != undefined) {
+
+        }
+    }
+
+    setCell(pos: Vec, value: number) {
+        this.#assertBounds(pos);
+        this.board[pos.toKeyString()] = value;
     }
 
     clearCell(pos: Vec) {
-        assert.ok(this.inBound(pos), "Position out of bounds");
-        delete this.board[this.#posToIdx(pos)];
+        this.#assertBounds(pos);
+        delete this.board[pos.toKeyString()];
     }
 
     getCell(pos: Vec) {
-        assert.ok(this.inBound(pos), "Position out of bounds");
-        return this.board[this.#posToIdx(pos)] as BoardCell;
+        this.#assertBounds(pos);
+        return this.board[pos.toKeyString()];
     }
 
-    checkWinForChangedPosition(changedPosition: Vec): BoardCell {
+    checkWinForChangedPosition(changedPosition: Vec): number | undefined {
         let checkVec: VecDirection = this.emptyPos.clone();
         let expectedCell = this.getCell(changedPosition);
 
-        assert.notEqual(expectedCell, BoardCellEmpty, "Changed cell is empty");
 
         outer: while (true) {
             // go through all possible directions
@@ -66,12 +71,11 @@ export class BoardHandler {
             // Direction valid for win
 
 
-            let checkStartPosition = new Vec(changedPosition.arr
-                .map((v, i) => {
-                    if (checkVec.arr[i] === 1) return 0;
-                    if (checkVec.arr[i] === -1) return this.sideLength - 1;
-                    return v
-                }));
+            let checkStartPosition = changedPosition.map((v, i) => {
+                if (checkVec.arr[i] === 1) return 0;
+                if (checkVec.arr[i] === -1) return this.sideLength - 1;
+                return v
+            });
 
             for (let i = 0; i < this.sideLength; i++) {
                 if (this.getCell(checkStartPosition.add(checkVec)) !== expectedCell) {
@@ -95,7 +99,9 @@ export class BoardHandler {
  * @param sidelength
  */
 function checkVectorIsOnFullDiagonal(vec: VecDirection, position: Vec, sidelength: number): boolean {
-    assert.equal(vec.arr.length, position.arr.length, "vector and position do not have the same length");
+    if(vec.arr.length !== position.arr.length) {
+        throw "vector and position do not have the same length";
+    }
     let expectedEdgeDistance = null;
 
     for (let i = 1; i < vec.arr.length; i++) {
@@ -155,7 +161,7 @@ function getNextCheckVector(vec: VecDirection): VecDirection | null {
 
     // increase used dimension count++
     dimCount++;
-    if (dimCount <= vec.arr.length) return new Vec(vec.arr.map((_, i) => i < dimCount ? -1 : 0));
+    if (dimCount <= vec.arr.length) return vec.map((_, i) => i < dimCount ? -1 : 0);
 
     // all dimensions counts completed
 
