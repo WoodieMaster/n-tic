@@ -6,11 +6,15 @@ import BoardView from "../components/BoardView.tsx";
 import {BoardHandler} from "../../../shared/tictactoe.ts";
 import {useState} from "react";
 import {repeat} from "../../../shared/util.ts";
+import {Vec} from "../../../shared/vec.ts";
 
-const boardHandler = new BoardHandler(3, 2);
+const boardHandler = new BoardHandler(2, 3);
+boardHandler.setCell(new Vec([0, 0]), 0);
+boardHandler.setCell(new Vec([1, 0]), 0);
+boardHandler.setCell(new Vec([2, 2]), 1);
 
 const Game = () => {
-    const [gameViewCount, setGameViewCount] = useState(2);
+    const [gameViewCount, setGameViewCount] = useState(1);
     const viewCols = Math.ceil(Math.sqrt(gameViewCount));
     const viewRows = Math.ceil(gameViewCount / viewCols);
 
@@ -29,7 +33,11 @@ const Game = () => {
                             gridTemplateColumns: `repeat(${viewCols}, 1fr)`,
                             gridTemplateRows: `repeat(${viewRows}, 1fr)`
                         }}>
-                            {repeat(i => <BoardView key={i} boardHandler={boardHandler}/>, gameViewCount)}
+                            {repeat(i => <BoardView key={i} boardHandler={boardHandler}
+                                                    playerShapes={[{type: "square", color: "blue"}, {
+                                                        type: "cross",
+                                                        color: "yellow"
+                                                    }]}/>, gameViewCount)}
                         </Box>
                     </Panel>
                     <PanelResizeHandle/>

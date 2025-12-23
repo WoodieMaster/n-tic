@@ -38,12 +38,12 @@ const BoardView = (p: Props) => {
             <Box sx={{flex: "1 1 auto", minWidth: 0, minHeight: 0, overflow: "hidden"}}>
                 <Canvas style={{position: "relative"}} camera={{near: 0.001, far: 10000}}>
                     {Canvas2D(viewStart, selectedDimensions, dimensionSizes, p.boardHandler, p.playerShapes)}
+                    <OrbitControls ref={v => {
+                        const prev = controlsRef.current;
+                        controlsRef.current = v;
+                        if (prev === null) resetControls();
+                    }}/>
                 </Canvas>
-                <OrbitControls ref={v => {
-                    const prev = controlsRef.current;
-                    controlsRef.current = v;
-                    if (prev === null) resetControls();
-                }}/>
             </Box>
             <Box sx={{height: "2em", flexShrink: 0}}>
                 <Stack direction="row" sx={{height: "2em"}}>
@@ -54,31 +54,53 @@ const BoardView = (p: Props) => {
         </Stack>
     );
 };
+
 function Canvas2D(viewStart: Vec, selectedDimensions: Tuple<number, 2 | 3>, dimensionSize: Tuple<number, 3>, boardHandler: BoardHandler, playerShapes: Shape[]) {
     const boardArea = getBoardArea(viewStart, selectedDimensions, dimensionSize);
     const grid = Array.from(map(boardArea, ([gridPos, realPos]) => {
         const cell = boardHandler.getCell(gridPos);
 
-        if (cell === undefined) return "";
+        if (cell === undefined) return <Cell realPos={realPos} key={gridPos.toKeyString()}
+                                             onClick={(p) => console.log("clicking: ", p)}/>;
 
         const svg = renderToString(<ShapeRenderer mode={"2D"} size={0} shape={playerShapes[cell]}/>);
         return <Cell svg={svg} realPos={realPos} key={gridPos.toKeyString()}/>
     }));
-    return <>{grid}</>
 
+    return <>{grid}</>
 }
 
-function Cell(p: { svg: string, realPos: Tuple<number, 3> }) {
+function Cell(p: { svg?: string, realPos: Tuple<number, 3>, onClick?: (realPos: Tuple<number, 3>) => void }) {
     const [hover, setHover] = useState(false);
     const pos = new Vector3(...p.realPos).multiplyScalar(150).addScalar(75);
     useEffect(() => {
         console.log("change hover");
     }, [hover]);
 
-    return <Svg
-        src={p.svg}
-        position={pos}
-    />;
+    return <>
+        {p.svg !== undefined ? <Svg
+                src={p.svg}
+                skipFill={hover}
+                position={pos}
+            /> :
+            <mesh
+                position={pos.clone().add(new Vector3(50, -50, 0))}
+                onPointerEnter={e => {
+                    e.stopPropagation();
+                    setHover(true);
+                }}
+                onPointerLeave={() => {
+                    setHover(false);
+                }}
+                onPointerDown={e => {
+                    e.stopPropagation();
+                    p.onClick?.(p.realPos);
+                }}
+            >
+                <boxGeometry args={[150, 150, 10]}/>
+                <meshBasicMaterial color={"gray"} transparent opacity={0.2} visible={hover}/>
+            </mesh>}
+    </>
 }
 
 function* getBoardArea<V extends Vec>(start: V, selectedDimensions: Tuple<number, 2 | 3>, dimensionSizes: Tuple<number, 3>): Generator<[V, Tuple<number, 3>]> {
