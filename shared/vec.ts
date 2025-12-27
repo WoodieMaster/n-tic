@@ -71,7 +71,7 @@ export class Vec<Length extends number = number, Item extends number = number> {
     static zero<Length extends number>(length: Length) { return Vec.from(0, length); }
 
 
-    clone() {
-        return new Vec<Length, Item>(Array.from(this.arr) as Tuple<Item, Length>);
+    clone<V extends Vec<Length, Item>>(this: V): V {
+        return new Vec<Length, Item>(Array.from(this.arr) as Tuple<Item, Length>) as V;
     }
 }
