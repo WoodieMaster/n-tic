@@ -33,7 +33,7 @@ const Game = () => {
                             gridTemplateColumns: `repeat(${viewCols}, 1fr)`,
                             gridTemplateRows: `repeat(${viewRows}, 1fr)`
                         }}>
-                            {repeat(i => <BoardView key={i} boardHandler={boardHandler}/>, gameViewCount)}
+                            {repeat(i => <BoardView key={i} />, gameViewCount)}
                         </Box>
                     </Panel>
                     <PanelResizeHandle/>
