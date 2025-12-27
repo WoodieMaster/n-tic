@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import type {Shape} from "../../../shared/types";
 import {Button, ClickAwayListener, Grow, MenuItem, MenuList, Paper, Popper, Stack, Typography} from "@mui/material";
 import ShapeRender from "./ShapeRender.tsx";
@@ -7,7 +7,8 @@ import ColorRenderer from "./ColorRenderer.tsx";
 
 interface Props {
     defaultValue?: Shape,
-    playerName?: string
+    playerName?: string,
+    onEdit?: (shape: Shape) => void,
 }
 
 const ShapeSelector = (p: Props) => {
@@ -15,6 +16,11 @@ const ShapeSelector = (p: Props) => {
     const colorRef = useRef<HTMLButtonElement>(null);
     const [shape, setShape] = useState(p.defaultValue);
     const [open, setOpen] = useState<null|"shape"|"color">(null);
+
+    useEffect(() => {
+        if(shape === undefined) return;
+        p.onEdit?.(shape);
+    }, [shape]);
 
     return (
         <Stack direction="row" spacing={1}

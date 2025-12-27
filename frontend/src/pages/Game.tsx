@@ -33,20 +33,12 @@ const Game = () => {
                             gridTemplateColumns: `repeat(${viewCols}, 1fr)`,
                             gridTemplateRows: `repeat(${viewRows}, 1fr)`
                         }}>
-                            {repeat(i => <BoardView key={i} boardHandler={boardHandler}
-                                                    playerShapes={[{type: "square", color: "blue"}, {
-                                                        type: "cross",
-                                                        color: "yellow"
-                                                    }]}/>, gameViewCount)}
+                            {repeat(i => <BoardView key={i} boardHandler={boardHandler}/>, gameViewCount)}
                         </Box>
                     </Panel>
                     <PanelResizeHandle/>
                     <Panel defaultSize={20} maxSize={50} minSize={10}>
-                        <GameSettings settings={{
-                            sideLength: 3,
-                            dimensionCount: 2,
-                            playerShapes: [{type: "circle", color: "red"}, {type: "square", color: "blue"}]
-                        }} players={["a", "b"]}/>
+                        <GameSettings/>
                     </Panel>
                 </PanelGroup>
             </Box>

@@ -7,13 +7,14 @@ import {useEffect, useRef, useState} from "react";
 import {Box, Button, Stack, Typography} from "@mui/material";
 import type {OrbitControls as OrbitControlsImpl} from "three-stdlib"
 import {Vec} from "../../../shared/vec.ts";
-import type {Shape, Tuple} from "../../../shared/types";
+import type {Tuple} from "../../../shared/types";
 import {map} from "../../../shared/util.ts";
 import {Vector3} from "three";
+import useGameSettings from "../stores/useGameSettings.ts";
+import useGameState from "../stores/useGameState.ts";
 
 interface Props {
     boardHandler: BoardHandler,
-    playerShapes: Shape[]
 }
 
 const BoardView = (p: Props) => {
@@ -37,7 +38,7 @@ const BoardView = (p: Props) => {
         <Stack sx={{height: "100%", width: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", flex: "1 1 auto"}}>
             <Box sx={{flex: "1 1 auto", minWidth: 0, minHeight: 0, overflow: "hidden"}}>
                 <Canvas style={{position: "relative"}} camera={{near: 0.001, far: 10000}}>
-                    {Canvas2D(viewStart, selectedDimensions, dimensionSizes, p.boardHandler, p.playerShapes)}
+                    <Canvas2D viewStart={viewStart} selectedDimensions={selectedDimensions} dimensionSizes={dimensionSizes} boardHandler={p.boardHandler}/>
                     <OrbitControls ref={v => {
                         const prev = controlsRef.current;
                         controlsRef.current = v;
@@ -57,8 +58,11 @@ const BoardView = (p: Props) => {
 
 function Canvas2D(viewStart: Vec, selectedDimensions: Tuple<number, 2 | 3>, dimensionSize: Tuple<number, 3>, boardHandler: BoardHandler, playerShapes: Shape[]) {
     const boardArea = getBoardArea(viewStart, selectedDimensions, dimensionSize);
+function Canvas2D(p: {viewStart: Vec, selectedDimensions: Tuple<number, 2 | 3>, dimensionSizes: Tuple<number, 3>, boardHandler: BoardHandler}) {
+    const {playerShapes} = useGameSettings();
+    const boardArea = getBoardArea(p.viewStart, p.selectedDimensions, p.dimensionSizes);
     const grid = Array.from(map(boardArea, ([gridPos, realPos]) => {
-        const cell = boardHandler.getCell(gridPos);
+        const cell = p.boardHandler.getCell(gridPos);
 
         if (cell === undefined) return <Cell realPos={realPos} key={gridPos.toKeyString()}
                                              onClick={(p) => console.log("clicking: ", p)}/>;
@@ -73,6 +77,7 @@ function Canvas2D(viewStart: Vec, selectedDimensions: Tuple<number, 2 | 3>, dime
 function Cell(p: { svg?: string, realPos: Tuple<number, 3>, onClick?: (realPos: Tuple<number, 3>) => void }) {
     const [hover, setHover] = useState(false);
     const pos = new Vector3(...p.realPos).multiplyScalar(150).addScalar(75);
+
     useEffect(() => {
         console.log("change hover");
     }, [hover]);
