@@ -111,21 +111,21 @@ function Cell(p: { svg?: string, realPos: Tuple<number, 3>, onClick?: (realPos: 
 }
 
 function* getBoardArea<V extends Vec>(start: V, selectedDimensions: Tuple<number, 2 | 3>, dimensionSizes: Tuple<number, 3>): Generator<[V, Tuple<number, 3>]> {
-    let gridPos = start.clone() as V;
+    let gridPos = start;
     let selectPos = [0, 0, 0] as Tuple<number, 3>;
-    yield [gridPos.clone(), Array.from(selectPos) as Tuple<number, 3>];
+    yield [gridPos, Array.from(selectPos) as Tuple<number, 3>];
     outer: while (true) {
         for (let i = 0; i < selectedDimensions.length; i++) {
             const dim = selectedDimensions[i];
             const size = dimensionSizes[i];
-            gridPos.arr[dim]++;
+            gridPos.with(dim, gridPos.get(dim)+1);
             selectPos[i]++;
             if (selectPos[i] < size) {
-                yield [gridPos.clone(), Array.from(selectPos) as Tuple<number, 3>];
+                yield [gridPos, Array.from(selectPos) as Tuple<number, 3>];
                 continue outer;
             }
             selectPos[i] = 0;
-            gridPos.arr[dim] = start.arr[dim]!;
+            gridPos.with(dim, start.get(dim));
         }
         return;
     }

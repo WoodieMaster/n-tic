@@ -16,26 +16,19 @@ export class BoardHandler {
     }
 
     #assertPos(pos: Vec) {
-        if (pos.arr.length !== this.dimensions) {
+        if (pos.size() !== this.dimensions) {
             throw "Invalid dimension count in position";
         }
     }
 
     inBound(pos: Vec) {
         this.#assertPos(pos);
-
-        return pos.arr.every(d => d < this.sideLength);
+        return pos.iter().every(d => d < this.sideLength);
     }
 
     #assertBounds(pos: Vec) {
         if (!this.inBound(pos)) {
             throw "Position out of bounds"
-        }
-    }
-
-    #assertFilledCell(pos: Vec) {
-        if (this.getCell(pos) != undefined) {
-
         }
     }
 
@@ -72,8 +65,8 @@ export class BoardHandler {
 
 
             let checkStartPosition = changedPosition.map((v, i) => {
-                if (checkVec.arr[i] === 1) return 0;
-                if (checkVec.arr[i] === -1) return this.sideLength - 1;
+                if (checkVec.get(i) === 1) return 0;
+                if (checkVec.get(i) === -1) return this.sideLength - 1;
                 return v
             });
 
@@ -99,14 +92,14 @@ export class BoardHandler {
  * @param sidelength
  */
 function checkVectorIsOnFullDiagonal(vec: VecDirection, position: Vec, sidelength: number): boolean {
-    if(vec.arr.length !== position.arr.length) {
+    if(!vec.comparable(position)) {
         throw "vector and position do not have the same length";
     }
     let expectedEdgeDistance = null;
 
-    for (let i = 1; i < vec.arr.length; i++) {
-        if (vec.arr[i] === 0) continue;
-        const edgeDistance = calculateEdgeDistance(sidelength, position.arr[i]!);
+    for (let i = 1; i < vec.size(); i++) {
+        if (vec.get(i) === 0) continue;
+        const edgeDistance = calculateEdgeDistance(sidelength, position.get(i)!);
         if (expectedEdgeDistance === null) expectedEdgeDistance = edgeDistance;
         else if (expectedEdgeDistance !== edgeDistance) {
             return false;
@@ -123,13 +116,13 @@ function getNextCheckVector(vec: VecDirection): VecDirection | null {
     // FIXME :) Generates twice the required vectors, just dont care to fix it right now :/
     let dimCount = 0;
     // Go through every combination of -1 and 1
-    for (let i = 0; i < vec.arr.length; i++) {
-        if (vec.arr[i] === -1) {
-            vec.arr[i] = 1;
+    for (let i = 0; i < vec.size(); i++) {
+        if (vec.get(i) === -1) {
+            vec = vec.with(i, 1);
             return vec;
         }
-        if (vec.arr[i] === 1) {
-            vec.arr[i] = -1;
+        if (vec.get(i) === 1) {
+            vec = vec.with(i, -1);
             dimCount++;
         }
     }
@@ -137,16 +130,16 @@ function getNextCheckVector(vec: VecDirection): VecDirection | null {
 
     // find all end aligned dimensions
     let resetIdx;
-    for (resetIdx = vec.arr.length - 1; resetIdx >= 0; resetIdx--) {
-        if (vec.arr[resetIdx] === 0) break;
-        vec.arr[resetIdx] = 0;
+    for (resetIdx = vec.size() - 1; resetIdx >= 0; resetIdx--) {
+        if (vec.get(resetIdx) === 0) break;
+        vec = vec.with(resetIdx, 0);
     }
 
     // find next used dimension
     let shiftedIdx;
     for (shiftedIdx = resetIdx - 1; shiftedIdx >= 0; shiftedIdx--) {
-        if (vec.arr[shiftedIdx] != 0) {
-            vec.arr[shiftedIdx] = 0;
+        if (vec.get(shiftedIdx) != 0) {
+            vec = vec.with(shiftedIdx, 0);
             break;
         }
     }
@@ -154,14 +147,14 @@ function getNextCheckVector(vec: VecDirection): VecDirection | null {
 
     if (shiftedIdx >= 0) {
         // insert part of dimension shifting
-        vec.arr.fill(-1, shiftedIdx + 1, shiftedIdx + 1 + vec.arr.length - resetIdx);
+        vec = vec.filled(-1, shiftedIdx + 1, shiftedIdx + 1 + vec.size() - resetIdx);
         return vec;
     }
     // all dimensions shifted to end
 
     // increase used dimension count++
     dimCount++;
-    if (dimCount <= vec.arr.length) return vec.map((_, i) => i < dimCount ? -1 : 0);
+    if (dimCount <= vec.size()) return vec.map((_, i) => i < dimCount ? -1 : 0);
 
     // all dimensions counts completed
 
