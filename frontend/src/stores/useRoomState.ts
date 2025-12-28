@@ -4,6 +4,7 @@ interface Data {
     roomId: string;
     players: string[];
     playerId: string;
+    admin: string;
 }
 
 interface Store extends Data{
@@ -14,6 +15,7 @@ const useRoomState = create<Store>(set => ({
     roomId: "",
     players: [],
     playerId: "",
+    admin: "",
 
     updateRoomState(data: Partial<Data>) {
         set(data)

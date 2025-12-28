@@ -8,11 +8,11 @@ import useRoomState from "../stores/useRoomState.ts";
 import {useEffect} from "react";
 
 const GameSettings = () => {
-    const {playerShapes, dimensionCount, sideLength, updateSettings, updatePlayerShape} = useGameSettings();
+    const {playerShapes, dimensionCount, sideLength, updateGameSettings, updatePlayerShape} = useGameSettings();
     const {players, updateRoomState} = useRoomState();
 
     useEffect(() => {
-        updateSettings({
+        updateGameSettings({
             sideLength: 3,
             dimensionCount: 2,
             playerShapes: [{type: "circle", color: "red"}, {type: "square", color: "blue"}]

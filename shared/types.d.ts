@@ -1,8 +1,8 @@
 import {colors, type shapes} from "./shapes.js";
 
 export type WsServerMessage = {
-    type: "playerJoin",
-    playerName: string,
+    type: "playerChange",
+    players: string[],
 } | {
     type: "setup"
 } | {
@@ -10,18 +10,15 @@ export type WsServerMessage = {
     admin: string,
     players: string[]
 } | {
-    type: "playerLeave",
-    playerName: string
-} | {
     type: "nextTurn",
     nextPlayer: string,
-    board: BoardCell[]
+    board: Board
 } | ({
     type: "roomSettings",
 } & Partial<RoomSettings>) | {
     type: "gameEnd",
     winner: string,
-    board: BoardCell[],
+    board: Board,
     reason: {
         type: "board",
         winVec: BoardDirection,
@@ -68,7 +65,7 @@ export interface User {
 export type Tuple<Item, Length extends number> = [Item, ...Item[]] & { length: Length };
 
 
-export type Shape = { type: typeof shapes[number], color: typeof colors[number]}
+export type Shape = { type: typeof shapes[number], color: typeof colors[number] }
 
 export interface RoomSettings {
     dimensionCount: number,
@@ -76,4 +73,4 @@ export interface RoomSettings {
     playerShapes: Shape[]
 }
 
-export type Board = {[K: string]: number|undefined}
+export type Board = { [K: string]: number | undefined }

@@ -2,7 +2,7 @@ import {create} from "zustand/react";
 import type {RoomSettings, Shape} from "../../../shared/types";
 
 interface Store extends RoomSettings {
-    updateSettings(data: Partial<RoomSettings>): void;
+    updateGameSettings(data: Partial<RoomSettings>): void;
     updatePlayerShape(shape: Shape, idx: number): void;
 }
 
@@ -11,7 +11,7 @@ const useGameSettings = create<Store>(set => ({
     sideLength: 3,
     playerShapes: [],
 
-    updateSettings(data: Partial<RoomSettings>) {
+    updateGameSettings(data: Partial<RoomSettings>) {
         set(data)
     },
 
