@@ -25,7 +25,7 @@ const useGameState = create<Store>(set => ({
         const key = pos.toKeyString();
         set(p => {
             if(key in p.board) {
-                console.log("error on board, ", p.board);
+                console.error("error on board, ", p.board);
                 throw new Error(`Position already occupied (${key})`);
             }
 

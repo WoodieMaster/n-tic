@@ -3,15 +3,8 @@ import GameHeader from "../components/GameHeader.tsx";
 import GameSettings from "../components/GameSettings.tsx";
 import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
 import BoardView from "../components/BoardView.tsx";
-import {BoardHandler} from "../../../shared/tictactoe.ts";
 import {useState} from "react";
 import {repeat} from "../../../shared/util.ts";
-import {Vec} from "../../../shared/vec.ts";
-
-const boardHandler = new BoardHandler(2, 3);
-boardHandler.setCell(new Vec([0, 0]), 0);
-boardHandler.setCell(new Vec([1, 0]), 0);
-boardHandler.setCell(new Vec([2, 2]), 1);
 
 const Game = () => {
     const [gameViewCount, setGameViewCount] = useState(1);

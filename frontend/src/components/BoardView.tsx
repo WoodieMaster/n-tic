@@ -96,7 +96,6 @@ function EmptyCell(p: {realPos: Tuple<number, 3>, onClick: (realPos: Tuple<numbe
             inClick.current = false;
         }}
         onPointerDown={e => {
-            console.log(e.buttons);
             inClick.current = e.button === 0;
         }}
         onPointerUp={e => {
