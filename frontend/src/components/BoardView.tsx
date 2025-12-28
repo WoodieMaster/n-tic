@@ -118,14 +118,14 @@ function* getBoardArea<V extends Vec>(start: V, selectedDimensions: Tuple<number
         for (let i = 0; i < selectedDimensions.length; i++) {
             const dim = selectedDimensions[i];
             const size = dimensionSizes[i];
-            gridPos.with(dim, gridPos.get(dim)+1);
+            gridPos = gridPos.with(dim, gridPos.get(dim)+1);
             selectPos[i]++;
             if (selectPos[i] < size) {
                 yield [gridPos, Array.from(selectPos) as Tuple<number, 3>];
                 continue outer;
             }
             selectPos[i] = 0;
-            gridPos.with(dim, start.get(dim));
+            gridPos = gridPos.with(dim, start.get(dim));
         }
         return;
     }
