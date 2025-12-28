@@ -66,7 +66,7 @@ function Canvas2D(p: {viewStart: Vec, selectedDimensions: Tuple<number, 2 | 3>, 
     const grid = Array.from(map(boardArea, ([gridPos, realPos]) => {
         const cell = board[gridPos.toKeyString()];
 
-        if (cell === undefined) return <Cell realPos={realPos} key={gridPos.toKeyString()}
+        if (cell === undefined) return <EmptyCell realPos={realPos} key={gridPos.toKeyString()}
                                              onClick={() => updateBoardCell(gridPos)}/>;
 
         const svg = renderToString(<ShapeRenderer mode={"2D"} size={0} shape={playerShapes[cell]}/>);
@@ -76,38 +76,47 @@ function Canvas2D(p: {viewStart: Vec, selectedDimensions: Tuple<number, 2 | 3>, 
     return <>{grid}</>
 }
 
-function Cell(p: { svg?: string, realPos: Tuple<number, 3>, onClick?: (realPos: Tuple<number, 3>) => void }) {
+function EmptyCell(p: {realPos: Tuple<number, 3>, onClick: (realPos: Tuple<number, 3>) => void }) {
+    const inClick = useRef(false);
     const [hover, setHover] = useState(false);
+
+    const pos = new Vector3(...p.realPos)
+        .multiplyScalar(150)
+        .addScalar(75)
+        .add(new Vector3(50, -50, 0));
+
+    return <mesh
+        position={pos}
+        onPointerEnter={e => {
+            e.stopPropagation();
+            setHover(true);
+        }}
+        onPointerLeave={() => {
+            setHover(false);
+            inClick.current = false;
+        }}
+        onPointerDown={e => {
+            console.log(e.buttons);
+            inClick.current = e.button === 0;
+        }}
+        onPointerUp={e => {
+            e.stopPropagation();
+            if(e.button !== 0 || !inClick.current) return;
+            p.onClick?.(p.realPos);
+        }}
+    >
+        <boxGeometry args={[150, 150, 10]}/>
+        <meshBasicMaterial color={"gray"} transparent opacity={0.2} visible={hover}/>
+    </mesh>
+}
+
+function Cell(p: { svg: string, realPos: Tuple<number, 3>}) {
     const pos = new Vector3(...p.realPos).multiplyScalar(150).addScalar(75);
 
-    useEffect(() => {
-        console.log("change hover");
-    }, [hover]);
-
-    return <>
-        {p.svg !== undefined ? <Svg
-                src={p.svg}
-                skipFill={hover}
-                position={pos}
-            /> :
-            <mesh
-                position={pos.clone().add(new Vector3(50, -50, 0))}
-                onPointerEnter={e => {
-                    e.stopPropagation();
-                    setHover(true);
-                }}
-                onPointerLeave={() => {
-                    setHover(false);
-                }}
-                onPointerDown={e => {
-                    e.stopPropagation();
-                    p.onClick?.(p.realPos);
-                }}
-            >
-                <boxGeometry args={[150, 150, 10]}/>
-                <meshBasicMaterial color={"gray"} transparent opacity={0.2} visible={hover}/>
-            </mesh>}
-    </>
+    return <Svg
+        src={p.svg}
+        position={pos}
+    />
 }
 
 function* getBoardArea<V extends Vec>(start: V, selectedDimensions: Tuple<number, 2 | 3>, dimensionSizes: Tuple<number, 3>): Generator<[V, Tuple<number, 3>]> {
