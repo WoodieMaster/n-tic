@@ -21,19 +21,24 @@ const ShapeRender = (p: Props) => {
 };
 
 const strokeWidth = 20;
-const length = 100 + strokeWidth;
-const pos = -strokeWidth / 2
+const min = strokeWidth/2;
+const fullSize = 100;
+const max = fullSize - min;
+const size = max - min;
+const center = (max + min) / 2;
+const viewBox = `0 0 ${fullSize} ${fullSize}`;
+
 const elements2D = {
-    "square": color => <rect width={100} height={100} x={0} y={0}
+    "square": color => <rect width={size} height={size} x={min} y={min}
                     strokeWidth={strokeWidth} stroke={color} fill={"none"}/>,
-    "circle": color => <circle r={50} cx={50} cy={50} strokeWidth={strokeWidth} stroke={color} fill="none"/>,
-    "triangle": color => <path d="M0,100 L50,0 L100,100 L0,100" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" fill="none"/>,
-    "cross": color => <path d="M0,0 L100,100 M0,100 L100,0" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round"/>,
+    "circle": color => <circle r={size/2} cx={center} cy={center} strokeWidth={strokeWidth} stroke={color} fill="none"/>,
+    "triangle": color => <path d={`M${min},${max} L${center},${min} L${max},${max} L${min},${max}`} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" fill="none"/>,
+    "cross": color => <path d={`M${min},${min} L${max},${max} M${min},${max} L${max},${min}`} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round"/>,
 } as const satisfies Record<Shape["type"], (color: string) => React.ReactElement>
 
 function Render2D(shape: Shape | undefined, size: string | number) {
     return (
-        <svg viewBox={`${pos},${pos},${length},${length}`} width={size} height={size}>
+        <svg viewBox={viewBox} width={size} height={size}>
             {shape ? elements2D[shape.type](shape.color) : ""}
         </svg>)
 }
