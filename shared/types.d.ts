@@ -45,7 +45,7 @@ export type WsClientMessage = {
     type: "leaveRoom",
 } | {
     type: "selectShape",
-    shape: string
+    shape: Shape
 } | {
     type: "editSettings",
     dimensionCount?: number,
