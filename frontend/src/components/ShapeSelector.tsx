@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {type ReactNode, useEffect, useRef, useState} from "react";
 import type {Shape} from "../../../shared/types";
 import {Button, ClickAwayListener, Grow, MenuItem, MenuList, Paper, Popper, Stack, Typography} from "@mui/material";
 import ShapeRender from "./ShapeRender.tsx";
@@ -7,14 +7,15 @@ import ColorRenderer from "./ColorRenderer.tsx";
 
 interface Props {
     defaultValue?: Shape,
-    playerName?: string,
+    title?: ReactNode,
     onEdit?: (shape: Shape) => void,
+    disabled?: boolean,
 }
 
 const ShapeSelector = (p: Props) => {
     const shapeRef = useRef<HTMLButtonElement>(null);
     const colorRef = useRef<HTMLButtonElement>(null);
-    const [shape, setShape] = useState(p.defaultValue);
+    const [shape, setShape] = useState<Shape>();
     const [open, setOpen] = useState<null|"shape"|"color">(null);
 
     useEffect(() => {
@@ -28,6 +29,7 @@ const ShapeSelector = (p: Props) => {
             <Button
                 ref={shapeRef}
                 onClick={() => setOpen("shape")}
+                disabled={p.disabled}
             >
                 <ShapeRender shape={shape} mode={"2D"} size={"50px"}/>
             </Button>
@@ -71,6 +73,7 @@ const ShapeSelector = (p: Props) => {
             <Button
                 ref={colorRef}
                 onClick={() => setOpen("color")}
+                disabled={p.disabled}
             >
                 <ColorRenderer color={shape?.color || "red"} size={"30px"}/>
             </Button>
@@ -110,7 +113,7 @@ const ShapeSelector = (p: Props) => {
                     </Grow>
                 )}
             </Popper>
-            <Typography fontSize={25}>{p.playerName ?? ""}</Typography>
+            <Typography fontSize={25}>{p.title ?? ""}</Typography>
         </Stack>
     );
 };
