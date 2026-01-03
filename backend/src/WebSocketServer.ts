@@ -59,7 +59,7 @@ export class WebSocketServer {
     }
 
     handleMessage(data: string, client: Client) {
-        logger.debug("Received message", data);
+        logger.debug("Received message: " + data);
         try {
             const msg: WsClientMessage = JSON.parse(data);
             if (msg === null) return;
