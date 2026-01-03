@@ -7,6 +7,7 @@ interface Props {
     min?: number;
     max?: number;
     disabled?: boolean;
+    onChange?: (value: number) => void;
 }
 
 const SettingSlider = (p: Props) => {
@@ -18,6 +19,10 @@ const SettingSlider = (p: Props) => {
         if(!isNaN(v))
             setValue(Math.min(Math.max(v, p.min ?? 0), p.max ?? 100));
     }, [text]);
+
+    useEffect(() => {
+        p.onChange?.(value);
+    }, [value]);
 
     return (
         <Box>
