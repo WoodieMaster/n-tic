@@ -5,16 +5,18 @@ import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
 import BoardView from "../components/BoardView.tsx";
 import {useState} from "react";
 import {repeat} from "../../../shared/util.ts";
+import useRoomState from "../stores/useRoomState.ts";
 
 const Game = () => {
     const [gameViewCount, setGameViewCount] = useState(1);
     const viewCols = Math.ceil(Math.sqrt(gameViewCount));
     const viewRows = Math.ceil(gameViewCount / viewCols);
+    const {roomId} = useRoomState();
 
     return (
         <Stack sx={{width: "100%", height: "100%"}}>
             <Box sx={{flex: 1}}>
-                <GameHeader players={["a", "b"]} roomId={"10100"}/>
+                <GameHeader players={["a", "b"]} roomId={roomId!}/>
             </Box>
             <Box sx={{width: "100%", height: "100%"}}>
                 <PanelGroup direction={"horizontal"} autoSaveId="gamePanelStructure">

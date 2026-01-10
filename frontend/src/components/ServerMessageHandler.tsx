@@ -22,7 +22,7 @@ const ServerMessageHandler = () => {
                 case "setup":
                     break;
                 case "roomSetup":
-                    updateRoomState({players: message.players, admin: message.admin});
+                    updateRoomState({players: message.players, admin: message.admin, playerId: message.playerId, roomId: message.roomId});
                     break;
                 case "nextTurn":
                     updateGameState({board: message.board, currentPlayer: players.indexOf(message.nextPlayer)});
@@ -34,12 +34,19 @@ const ServerMessageHandler = () => {
                     updateGameState({board: message.board, state: "win"});
 
                     let info = "";
-                    if (message.reason.type === "opponentsDisconnected") info = " (Opponent disconnected)"
-
-                    if (message.winner === playerId) {
-                        toast.success("You won!" + info);
-                    } else {
-                        toast.error(message.winner + " won!" + info)
+                    switch (message.reason.type) {
+                        case "opponentsDisconnected":
+                            toast.success("You won! (Opponent disconnected");
+                            break;
+                        case "tie":
+                            toast.custom("Tie");
+                            break;
+                        case "board":
+                            if (message.reason.winner === playerId) {
+                                toast.success("You won!" + info);
+                            } else {
+                                toast.error(message.reason.winner + " won!" + info)
+                            }
                     }
                     break;
                 case "error":

@@ -1,7 +1,7 @@
 import {create} from "zustand/react";
 
 interface Data {
-    roomId: string;
+    roomId: string|null;
     players: string[];
     playerId: string;
     admin: string;
@@ -12,7 +12,7 @@ interface Store extends Data{
 }
 
 const useRoomState = create<Store>(set => ({
-    roomId: "",
+    roomId: null,
     players: [],
     playerId: "",
     admin: "",

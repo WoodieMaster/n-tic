@@ -1,5 +1,5 @@
-import {WebSocketServer} from "./WebSocketServer.ts";
+import {GameServer} from "./GameServer.ts";
 
 const PORT = 9995;
 
-const server = new WebSocketServer(PORT);
+const server = new GameServer(PORT);

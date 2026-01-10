@@ -1,4 +1,4 @@
-import {colors, type shapes} from "./shapes.js";
+import {shapeColors, type shapeTypes} from "./shapes.js";
 
 export type WsServerMessage = {
     type: "playerChange",
@@ -7,6 +7,8 @@ export type WsServerMessage = {
     type: "setup"
 } | {
     type: "roomSetup",
+    roomId: string,
+    playerId: string,
     admin: string,
     players: string[]
 } | {
@@ -17,18 +19,22 @@ export type WsServerMessage = {
     type: "roomSettings",
 } & Partial<RoomSettings>) | {
     type: "gameEnd",
-    winner: string,
     board: Board,
-    reason: {
-        type: "board",
-        winVec: BoardDirection,
-        winPosition: BoardVector
-    } | {
-        type: "opponentsDisconnected"
-    }
+    reason: GameOverReason
 } | {
     type: "error",
     msg: string
+}
+
+export type GameOverReason = {
+    type: "board",
+    winVec: BoardDirection,
+    winPosition: BoardVector,
+    winner: string
+} | {
+    type: "opponentsDisconnected"
+} | {
+    type: "tie"
 }
 
 export type WsClientMessage = {
@@ -37,10 +43,10 @@ export type WsClientMessage = {
 } | {
     type: "joinRoom",
     roomId: string,
-    playerName: string | null
+    playerName: string
 } | {
     type: "createRoom",
-    playerName: string | null
+    playerName: string
 } | {
     type: "leaveRoom",
 } | {
@@ -57,15 +63,14 @@ export type WsClientMessage = {
     position: BoardVector
 }
 
-export interface User {
-    id: string,
-    name: string
+export interface Player {
+    name: string,
 }
 
 export type Tuple<Item, Length extends number> = [Item, ...Item[]] & { length: Length };
 
 
-export type Shape = { type: typeof shapes[number], color: typeof colors[number] }
+export type Shape = { type: typeof shapeTypes[number], color: typeof shapeColors[number] }
 
 export interface RoomSettings {
     dimensionCount: number,

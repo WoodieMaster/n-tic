@@ -2,7 +2,7 @@ import {type ReactNode, useEffect, useRef, useState} from "react";
 import type {Shape} from "../../../shared/types";
 import {Button, ClickAwayListener, Grow, MenuItem, MenuList, Paper, Popper, Stack, Typography} from "@mui/material";
 import ShapeRender from "./ShapeRender.tsx";
-import {colors, shapes} from "../../../shared/shapes.ts";
+import {shapeColors, shapeTypes} from "../../../shared/shapes.ts";
 import ColorRenderer from "./ColorRenderer.tsx";
 
 interface Props {
@@ -51,7 +51,7 @@ const ShapeSelector = (p: Props) => {
                         <Paper>
                             <ClickAwayListener onClickAway={() => open === "shape" && setOpen(null)}>
                                 <MenuList id="split-button-menu" autoFocusItem>
-                                    {shapes.map((option) => (
+                                    {shapeTypes.map((option) => (
                                         <MenuItem
                                             key={option}
                                             selected={option === shape?.type}
@@ -95,7 +95,7 @@ const ShapeSelector = (p: Props) => {
                         <Paper>
                             <ClickAwayListener onClickAway={() => open === "color" && setOpen(null)}>
                                 <MenuList id="split-button-menu" autoFocusItem>
-                                    {colors.map((option) => (
+                                    {shapeColors.map((option) => (
                                         <MenuItem
                                             key={option}
                                             selected={option === shape?.color}

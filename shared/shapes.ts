@@ -1,2 +1,2 @@
-export const shapes = ["cross", "circle", "square", "triangle"] as const;
-export const colors = ["red", "blue", "green", "yellow", "white"] as const;
+export const shapeTypes = ["cross", "circle", "square", "triangle"] as const;
+export const shapeColors = ["red", "blue", "green", "yellow", "white"] as const;
