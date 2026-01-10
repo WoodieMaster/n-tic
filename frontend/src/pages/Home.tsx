@@ -25,7 +25,7 @@ const Home = () => {
                 border: "1px solid var(--variant-containedBg)"
             }} component="form">
                 <TextField label={"Name"} fullWidth onChange={e => nameRef.current = e.target.value}/>
-                <Button variant="contained" onClick={createGame} fullWidth>Create Game</Button>
+                    <Button variant="contained" onClick={createGame} fullWidth>Create Game</Button>
                 <Box sx={{gap: 2, display: "flex"}}>
                     <TextField label={"Game ID"} onChange={e => roomIdRef.current = e.target.value} />
                     <Button variant="contained" onClick={joinGame}>Join Game</Button>

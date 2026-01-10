@@ -2,7 +2,7 @@ import {Canvas} from "@react-three/fiber"
 import {OrbitControls, Svg} from "@react-three/drei"
 import ShapeRenderer from "./ShapeRender.tsx";
 import {renderToString} from "react-dom/server";
-import {useRef, useState} from "react";
+import {type JSX, type ReactElement, useMemo, useRef, useState} from "react";
 import {Box, Button, Stack, Typography} from "@mui/material";
 import type {OrbitControls as OrbitControlsImpl} from "three-stdlib"
 import {Vec} from "../../../shared/vec.ts";
@@ -11,11 +11,13 @@ import {map, repeat} from "../../../shared/util.ts";
 import {Vector3} from "three";
 import useGameSettings from "../stores/useGameSettings.ts";
 import useGameState from "../stores/useGameState.ts";
+import * as React from "react";
+import useRoomState from "../stores/useRoomState.ts";
 
 
 interface Props {
     defaultViewStart?: Vec;
-    defaultSelectedDimensions?: Tuple<number, 2|3>,
+    defaultSelectedDimensions?: Tuple<number, 2 | 3>,
     defaultSideLength?: number
 }
 
@@ -24,7 +26,7 @@ const fovRadians = Math.PI / 180 * fov;
 const BoardView = (p: Props) => {
     const {sideLength} = useGameSettings();
     const [viewStart, setViewStart] = useState(p.defaultViewStart ?? Vec.zero(sideLength));
-    const [selectedDimensions, setSelectedDimensions] = useState(p.defaultSelectedDimensions ?? [0,1] as Tuple<number, 2|3>);
+    const [selectedDimensions, setSelectedDimensions] = useState(p.defaultSelectedDimensions ?? [0, 1] as Tuple<number, 2 | 3>);
     const [viewSideLength, setViewSideLength] = useState(p.defaultSideLength ?? 8);
     const controlsRef = useRef<OrbitControlsImpl>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,7 +39,7 @@ const BoardView = (p: Props) => {
         const gridSize = viewSideLength * 150;
         const gridCenter = gridSize / 2;
 
-        const camera_z = Math.abs((gridSize*1.15) / (2 * Math.tan(fovRadians / 2)));
+        const camera_z = Math.abs((gridSize * 1.15) / (2 * Math.tan(fovRadians / 2)));
 
         controls.position0.set(gridCenter, gridCenter, camera_z);
         controls.target0.set(gridCenter, gridCenter, 0);
@@ -49,7 +51,9 @@ const BoardView = (p: Props) => {
                 <Canvas style={{position: "relative"}} ref={canvasRef} camera={{near: 0.001, far: 100000, fov}}>
                     {
                         selectedDimensions.length === 2
-                            ? <Canvas2D viewStart={viewStart} selectedDimensions={selectedDimensions as Tuple<number, 2>} sideLength={viewSideLength}/>
+                            ?
+                            <Canvas2D viewStart={viewStart} selectedDimensions={selectedDimensions as Tuple<number, 2>}
+                                      sideLength={viewSideLength}/>
                             : <></>
                     }
                     <OrbitControls ref={v => {
@@ -69,22 +73,32 @@ const BoardView = (p: Props) => {
     );
 };
 
-function Canvas2D(p: {viewStart: Vec, selectedDimensions: Tuple<number, 2>, sideLength: number}) {
+function Canvas2D(p: { viewStart: Vec, selectedDimensions: Tuple<number, 2>, sideLength: number }) {
     const {playerShapes} = useGameSettings();
-    const {updateBoardCell, board} = useGameState();
+    const {updateBoardCell, board, state, currentPlayerIdx} = useGameState();
+    const {players, playerId} = useRoomState();
+    const selfPlayerIdx = useMemo(() => players.indexOf(playerId), [playerId, players]);
     const boardArea = getBoardArea(p.viewStart, p.selectedDimensions, p.sideLength);
-    const grid = Array.from(map(boardArea, ([gridPos, inViewPosition]) => {
-        const cell = board[gridPos.toKeyString()];
 
-        if (cell === undefined) return <EmptyCell2D inViewPosition={inViewPosition} key={gridPos.toKeyString()}
-                                                    onClick={() => updateBoardCell(gridPos)}/>;
 
-        const svg = renderToString(<ShapeRenderer mode={"2D"} size={0} shape={playerShapes[cell]}/>);
-        return <Cell2D svg={svg} inViewPosition={inViewPosition} key={gridPos.toKeyString()}/>
-    }));
+    let grid: JSX.Element[];
 
-    const verticalLines = Array.from(repeat(i => <Line2D key={i} realPos={[i+1,0]} elementCount={p.sideLength} dimension={1}/>, p.sideLength-1));
-    const horizontalLines = Array.from(repeat(i => <Line2D key={i} realPos={[0,i+1]} elementCount={p.sideLength} dimension={0}/>, p.sideLength-1));
+    if(state === "wait") grid = [];
+    else
+        grid = Array.from(map(boardArea, ([gridPos, inViewPosition]) => {
+            const cell = board[gridPos.toKeyString()];
+
+            if (cell === undefined) return state === "play" && selfPlayerIdx === currentPlayerIdx? <EmptyCell2D inViewPosition={inViewPosition} key={gridPos.toKeyString()}
+                                                        onClick={() => updateBoardCell(gridPos)}/>: <></>;
+
+            const svg = renderToString(<ShapeRenderer mode={"2D"} size={0} shape={playerShapes[cell]}/>);
+            return <Cell2D svg={svg} inViewPosition={inViewPosition} key={gridPos.toKeyString()}/>
+        }));
+
+    const verticalLines = Array.from(repeat(i => <Line2D key={i} realPos={[i + 1, 0]} elementCount={p.sideLength}
+                                                         dimension={1}/>, p.sideLength - 1));
+    const horizontalLines = Array.from(repeat(i => <Line2D key={i} realPos={[0, i + 1]} elementCount={p.sideLength}
+                                                           dimension={0}/>, p.sideLength - 1));
 
     return <>
         {grid}
@@ -93,7 +107,7 @@ function Canvas2D(p: {viewStart: Vec, selectedDimensions: Tuple<number, 2>, side
     </>
 }
 
-function EmptyCell2D(p: {inViewPosition: Tuple<number, 3>, onClick: (realPos: Tuple<number, 3>) => void }) {
+function EmptyCell2D(p: { inViewPosition: Tuple<number, 3>, onClick?: (realPos: Tuple<number, 3>) => void }) {
     const inClick = useRef(false);
     const [hover, setHover] = useState(false);
 
@@ -119,7 +133,7 @@ function EmptyCell2D(p: {inViewPosition: Tuple<number, 3>, onClick: (realPos: Tu
         }}
         onPointerUp={e => {
             e.stopPropagation();
-            if(e.button !== 0 || !inClick.current) return;
+            if (e.button !== 0 || !inClick.current) return;
             p.onClick?.(p.inViewPosition);
         }}
     >
@@ -128,27 +142,27 @@ function EmptyCell2D(p: {inViewPosition: Tuple<number, 3>, onClick: (realPos: Tu
     </mesh>
 }
 
-function Cell2D(p: { svg: string, inViewPosition: Tuple<number, 3>}) {
+function Cell2D(p: { svg: string, inViewPosition: Tuple<number, 3> }) {
     const pos = new Vector3(...p.inViewPosition).multiplyScalar(150);
 
     return <Svg
         src={p.svg}
         position={pos}
-        scale={[1,-1, 1]}
+        scale={[1, -1, 1]}
     />
 }
 
-function Line2D(p: {realPos: Tuple<number, 2>, elementCount: number, dimension: number}) {
+function Line2D(p: { realPos: Tuple<number, 2>, elementCount: number, dimension: number }) {
     const length = p.elementCount * 150;
-    const sizes = [10,10,10] as Tuple<number, 3>;
+    const sizes = [10, 10, 10] as Tuple<number, 3>;
     sizes[p.dimension] = length;
 
-    const offset = [-25,-25,0];
+    const offset = [-25, -25, 0];
     offset[p.dimension] = length / 2 - 20;
     const pos = new Vector3(...p.realPos).multiplyScalar(150).add(new Vector3(...offset));
 
     return <mesh position={pos}>
-        <boxGeometry args={sizes} />
+        <boxGeometry args={sizes}/>
         <meshBasicMaterial color={"gray"}/>
     </mesh>
 }
@@ -161,7 +175,7 @@ function* getBoardArea<V extends Vec>(start: V, selectedDimensions: Tuple<number
         for (let i = 0; i < selectedDimensions.length; i++) {
             const dim = selectedDimensions[i];
             const size = sideLength;
-            gridPos = gridPos.with(dim, gridPos.get(dim)+1);
+            gridPos = gridPos.with(dim, gridPos.get(dim) + 1);
             selectPos[i]++;
             if (selectPos[i] < size) {
                 yield [gridPos, Array.from(selectPos) as Tuple<number, 3>];

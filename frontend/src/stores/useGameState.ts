@@ -4,7 +4,7 @@ import type {Vec} from "../../../shared/vec.ts";
 
 interface Data {
     board: Board,
-    currentPlayer: number,
+    currentPlayerIdx: number,
     state: "wait" | "play" | "win"
 }
 
@@ -15,7 +15,7 @@ interface Store extends Data{
 
 const useGameState = create<Store>(set => ({
     board: {},
-    currentPlayer: 0,
+    currentPlayerIdx: 0,
     state: "play",
 
     updateGameState(data: Partial<Data>) {
@@ -32,7 +32,7 @@ const useGameState = create<Store>(set => ({
             return {
                 board: {
                     ...p.board,
-                    [key]: p.currentPlayer,
+                    [key]: p.currentPlayerIdx,
                 }
             }
         })

@@ -27,7 +27,7 @@ const ServerMessageHandler = () => {
                     updateGameState({state: "wait"})
                     break;
                 case "nextTurn":
-                    updateGameState({board: message.board, currentPlayer: players.indexOf(message.nextPlayer)});
+                    updateGameState({board: message.board, currentPlayerIdx: players.indexOf(message.nextPlayer)});
                     break;
                 case "roomSettings":
                     updateGameSettings(message);

@@ -1,4 +1,5 @@
 import {
+    Button,
     Stack,
 } from "@mui/material";
 import SettingSlider from "./SettingSlider.tsx";
@@ -38,7 +39,7 @@ const GameSettings = () => {
 
         deferSettingUpdate(() => updateSettings({sideLength: newSideLength}), settingUpdateTimeout);
     }
-
+    const settingDisabled = selfPlayerName !== admin || gameState !== "wait"
     return (
         <Stack sx={{bgcolor: "rgb(30,30,30)", height: "100%", padding: 3}} spacing={5}>
             <SettingSlider
@@ -46,7 +47,7 @@ const GameSettings = () => {
                 defaultValue={dimensionCount}
                 min={2}
                 max={10}
-                disabled={selfPlayerName !== admin || gameState !== "wait"}
+                disabled={settingDisabled}
                 onChange={dimCountChange}
             />
             <SettingSlider
@@ -54,9 +55,16 @@ const GameSettings = () => {
                 defaultValue={sideLength}
                 min={3}
                 max={10}
-                disabled={selfPlayerName !== admin || gameState !== "wait"}
+                disabled={settingDisabled}
                 onChange={sideLengthChange}
             />
+            <Button
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={settingDisabled}
+                onClick={() => sendMessage({type: "startGame"})}
+            >Start Game</Button>
             <Stack spacing={2} sx={{bgcolor: "rgba(0,0,0,0.1)", height: "100%", padding: 3}}>
                 {players.map((playerName, idx) =>
                     <ShapeSelector
