@@ -18,11 +18,13 @@ const ServerMessageHandler = () => {
             switch (message.type) {
                 case "playerChange":
                     updateRoomState({players: message.players});
+                    if(message.newAdmin) updateRoomState({admin: message.newAdmin})
                     break;
                 case "setup":
                     break;
                 case "roomSetup":
                     updateRoomState({players: message.players, admin: message.admin, playerId: message.playerId, roomId: message.roomId});
+                    updateGameState({state: "wait"})
                     break;
                 case "nextTurn":
                     updateGameState({board: message.board, currentPlayer: players.indexOf(message.nextPlayer)});

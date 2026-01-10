@@ -3,6 +3,7 @@ import {shapeColors, type shapeTypes} from "./shapes.js";
 export type WsServerMessage = {
     type: "playerChange",
     players: string[],
+    newAdmin?: string|undefined
 } | {
     type: "setup"
 } | {

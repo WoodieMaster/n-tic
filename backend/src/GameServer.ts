@@ -55,6 +55,7 @@ class Room {
     }
 
     id() {return this.#id;}
+    admin() {return this.#admin};
 
     isEditable() {
         return this.#gameState.state === "wait";
@@ -73,8 +74,9 @@ class Room {
         this.broadcast({type: "playerChange", players: this.playerList()});
     }
 
-    changeSettings(settings: Partial<RoomSettings>): void {
+    updateSettings(settings: Partial<RoomSettings>): void {
         this.#settings = {...this.#settings, ...settings};
+        this.broadcast({...settings, type: "roomSettings"});
     }
 
     editPlayerShape(client: Client, shape: Shape) {
@@ -108,16 +110,25 @@ class Room {
         const clientIdx = this.#clients.indexOf(client);
         this.#clients.splice(clientIdx, 1);
         const playerShapes = this.#settings.playerShapes;
-        this.#settings.playerShapes = [...playerShapes.slice(0, clientIdx), ...playerShapes.slice(clientIdx+1),playerShapes[clientIdx]!]
         client.room = null;
+
+        this.updateSettings({playerShapes: [...playerShapes.slice(0, clientIdx), ...playerShapes.slice(clientIdx+1),playerShapes[clientIdx]!]});
 
         if(this.#clients.length === 0) {
             return "removeRoom";
-        }else if(this.#clients.length === 1 && this.#gameState.state === "play") {
+        }
+
+        let newAdmin: string|undefined;
+        if(this.#admin === client) {
+            this.#admin = this.#clients[0]!;
+            newAdmin = this.#admin.player.name;
+        }
+
+        if(this.#clients.length === 1 && this.#gameState.state === "play") {
             this.gameOver({type: "opponentsDisconnected"});
         }
 
-        this.broadcast({type: "playerChange", players: this.playerList()})
+        this.broadcast({type: "playerChange", players: this.playerList(), newAdmin});
     }
 
     broadcast(message: WsServerMessage) {
@@ -171,10 +182,6 @@ export class GameServer {
             this.#clients.delete(userId);
             logger.debug(`Remaining clients: ${this.#clients.size}`)
         })
-    }
-
-    broadcast(message: WsServerMessage) {
-        this.#clients.forEach(client => send(message, client))
     }
 
     createRoom(admin: Client) {
@@ -236,9 +243,27 @@ export class GameServer {
             case "selectShape": {
                 if (client.room === null)
                     failAssert("Client not in a room");
-
+                if(!client.room.isEditable()) {
+                    return send({type: "error", msg: "Cannot change your shape once game has started"}, client);
+                }
                 client.room.editPlayerShape(client, msg.shape);
+                break;
             }
+            case "editSettings":
+                if(client.room === null)
+                    failAssert("Client not in a room");
+
+                if(client.room.admin() !== client) {
+                    return send({type: "error", msg: "Only admin can change settings"}, client);
+                }
+
+                if(!client.room.isEditable()) {
+                    return send({type: "error", msg: "Cannot change settings once game has started"}, client);
+                }
+
+                client.room.updateSettings(msg);
+
+                break;
         }
     }
 }

@@ -8,36 +8,35 @@ import useRoomState from "../stores/useRoomState.ts";
 import {useEffect, useMemo} from "react";
 import useConnection from "../stores/useConnection.ts";
 import useGameState from "../stores/useGameState.ts";
+import useDefer from "../hooks/useDefer.ts";
+import type {RoomSettings} from "../../../shared/types";
+
+const settingUpdateTimeout = 500;
 
 const GameSettings = () => {
     const {playerShapes, dimensionCount, sideLength, updateGameSettings, updatePlayerShape} = useGameSettings();
-    const {players, updateRoomState, playerId: selfPlayerName, admin} = useRoomState();
+    const {players, playerId: selfPlayerName, admin} = useRoomState();
     const {state: gameState} = useGameState();
     const {sendMessage} = useConnection();
+    const deferSettingUpdate = useDefer();
 
-    useEffect(() => {
-        console.warn("DEBUG setup enabled");
+    console.debug("render settings: ", {gameState, selfPlayerName, admin, playerShapes, dimensionCount, sideLength, players});
 
-        updateGameSettings({
-            sideLength: 3,
-            dimensionCount: 2,
-            playerShapes: [{type: "circle", color: "red"}, {type: "square", color: "blue"}]
-        });
-        updateRoomState({players: ["a", "b"], admin: "b", playerId: "b"});
-    }, []);
+    function updateSettings(settings: Partial<RoomSettings>) {
+        updateGameSettings(settings);
+        sendMessage({type: "editSettings", ...settings})
+    }
 
     function dimCountChange(newDimCount: number) {
-        if (dimensionCount === newDimCount) return;
+        console.assert(dimensionCount !== newDimCount, "dimension count update without change");
 
-        updateGameSettings({dimensionCount: newDimCount});
-        sendMessage({type: "editSettings", dimensionCount: newDimCount});
+        deferSettingUpdate(() => updateSettings({dimensionCount: newDimCount}), settingUpdateTimeout);
     }
 
     function sideLengthChange(newSideLength: number) {
-        if (sideLength === newSideLength) return;
-        console.log("new side length")
-        updateGameSettings({sideLength: newSideLength});
-        sendMessage({type: "editSettings", sideLength: newSideLength});
+        console.assert(sideLength !== newSideLength, "side length update without change");
+
+        deferSettingUpdate(() => updateSettings({sideLength: newSideLength}), settingUpdateTimeout);
     }
 
     return (
@@ -61,7 +60,7 @@ const GameSettings = () => {
             <Stack spacing={2} sx={{bgcolor: "rgba(0,0,0,0.1)", height: "100%", padding: 3}}>
                 {players.map((playerName, idx) =>
                     <ShapeSelector
-                        key={idx}
+                        key={playerName}
                         defaultValue={playerShapes[idx]}
                         title={playerName}
                         disabled={selfPlayerName !== playerName || gameState !== "wait"}

@@ -11,16 +11,24 @@ interface Props {
 }
 
 const SettingSlider = (p: Props) => {
-    const [text, setText] = useState(p.defaultValue+"");
+    const [text, setText] = useState(p.defaultValue.toString());
     const [value, setValue] = useState(p.defaultValue);
 
     useEffect(() => {
-        const v = parseInt(text);
-        if(!isNaN(v))
-            setValue(Math.min(Math.max(v, p.min ?? 0), p.max ?? 100));
+        setValue(p.defaultValue);
+        setText(p.defaultValue.toString());
+    }, [p.defaultValue]);
+
+    useEffect(() => {
+        let newValue = parseInt(text);
+        if (isNaN(newValue)) return;
+        newValue = Math.min(Math.max(newValue, p.min ?? 0), p.max ?? 100);
+        if (newValue === value) return;
+        setValue(newValue);
     }, [text]);
 
     useEffect(() => {
+        if (value === p.defaultValue) return;
         p.onChange?.(value);
     }, [value]);
 
@@ -29,7 +37,7 @@ const SettingSlider = (p: Props) => {
             <Typography gutterBottom>
                 {p.label}
             </Typography>
-            <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+            <Grid container spacing={2} sx={{alignItems: 'center'}}>
                 <Grid size={9}>
                     <Slider
                         disabled={p.disabled}
@@ -38,7 +46,7 @@ const SettingSlider = (p: Props) => {
                         value={value}
                         onChange={(_, v) => {
                             setValue(v);
-                            setText(""+v);
+                            setText(v.toString());
                         }}
                     />
                 </Grid>

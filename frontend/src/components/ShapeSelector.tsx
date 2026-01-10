@@ -15,11 +15,16 @@ interface Props {
 const ShapeSelector = (p: Props) => {
     const shapeRef = useRef<HTMLButtonElement>(null);
     const colorRef = useRef<HTMLButtonElement>(null);
-    const [shape, setShape] = useState<Shape>();
+    const [shape, setShape] = useState<Shape|undefined>(p.defaultValue);
     const [open, setOpen] = useState<null|"shape"|"color">(null);
 
     useEffect(() => {
-        if(shape === undefined) return;
+        setShape(p.defaultValue);
+    }, [p.defaultValue]);
+
+    useEffect(() => {
+        if(shape === p.defaultValue) return;
+        if(shape === undefined) return console.assert(false, "Shape undefined without default value")
         p.onEdit?.(shape);
     }, [shape]);
 
