@@ -102,9 +102,9 @@ class Room {
     }
 
     removeClient(client: Client) {
-        assert.equal(client.room, this.#id, "Client has no connection to room");
+        assert.equal(client.room, this, "Client has no connection to room");
         assert.ok(this.#clients.includes(client), "Client not registered in room");
-
+        logger.debug(`Removing client ${client.id} from room ${this.#id}`);
         const clientIdx = this.#clients.indexOf(client);
         this.#clients.splice(clientIdx, 1);
         const playerShapes = this.#settings.playerShapes;
@@ -156,7 +156,7 @@ export class GameServer {
             player: {
                 name: "",
             }
-        } satisfies Client;
+        } as Client;
         logger.debug(`Client connected: ${userId}`);
 
         this.#clients.set(userId, client);
@@ -167,6 +167,7 @@ export class GameServer {
 
         socket.on("close", () => {
             logger.debug(`Client disconnected: ${userId}`);
+            client.room?.removeClient(client);
             this.#clients.delete(userId);
             logger.debug(`Remaining clients: ${this.#clients.size}`)
         })
@@ -227,7 +228,8 @@ export class GameServer {
                 if (client.room === null)
                     failAssert("Client not in a room");
                 if(client.room.removeClient(client) === "removeRoom"){
-                    this.#rooms.delete(client.room.id())
+                    this.#rooms.delete(client.room.id());
+                    logger.debug(`Removing room ${client.room.id()}`)
                 }
                 break;
             }
