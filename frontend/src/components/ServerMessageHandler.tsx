@@ -11,9 +11,7 @@ const ServerMessageHandler = () => {
     const {updateRoomState, playerId, players} = useRoomState();
     const {updateGameState, state} = useGameState();
 
-    console.log("handler render",{players});
     useEffect(() => {
-        console.log("handler effect", {players});
         const handler = (e: ServerMessageEvent) => {
             const message = e.message;
 

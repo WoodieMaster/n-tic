@@ -100,6 +100,9 @@ class Room {
             roomId: this.#id,
             playerId: client.player.name
         }, client);
+        send({
+            ...this.#settings, type: "roomSettings"
+        }, client);
         this.broadcast({type: "playerChange", players: this.playerList()});
     }
 
