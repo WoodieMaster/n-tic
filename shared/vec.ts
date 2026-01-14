@@ -1,6 +1,6 @@
 import * as assert from "node:assert";
-import {repeat_v} from "./util.js";
-import type {Tuple} from "./types.js";
+import {repeat_v} from "./util.ts";
+import type {Tuple} from "./types.ts";
 
 export type VecDirection = Vec<number, -1 | 0 | 1>;
 

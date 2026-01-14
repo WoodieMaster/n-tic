@@ -11,8 +11,9 @@ import type {
 import logger from "./logger.ts";
 import * as assert from "node:assert";
 import {AssertionError} from "node:assert";
-import type {BoardHandler} from "../../shared/tictactoe.ts";
+import {BoardHandler} from "../../shared/tictactoe.ts";
 import {shapeColors, shapeTypes} from "../../shared/shapes.ts";
+import {Vec} from "../../shared/vec.ts";
 
 export type Client = {
     /**
@@ -41,6 +42,7 @@ class Room {
         state: "wait"
     } | {
         state: "play",
+        turn: string,
         boardHandler: BoardHandler;
     } | {
         state: "end",
@@ -54,11 +56,29 @@ class Room {
         this.addClient(admin);
     }
 
-    id() {return this.#id;}
-    admin() {return this.#admin};
+    id() {
+        return this.#id;
+    }
+
+    admin() {
+        return this.#admin
+    };
 
     isEditable() {
         return this.#gameState.state === "wait";
+    }
+
+    state() {
+        return this.#gameState.state;
+    }
+
+    currentTurn() {
+        if (this.#gameState.state !== "play") return null;
+        return this.#gameState.turn;
+    }
+
+    playerCount() {
+        return this.#clients.length;
     }
 
     addClient(client: Client) {
@@ -67,10 +87,19 @@ class Room {
         assert.equal(this.#gameState.state, "wait", "Game already running");
 
         this.#clients.push(client);
-        this.#settings.playerShapes.push({type: shapeTypes[this.#clients.length % shapeTypes.length]!, color: shapeColors[this.#clients.length % shapeColors.length]!});
+        this.#settings.playerShapes.push({
+            type: shapeTypes[this.#clients.length % shapeTypes.length]!,
+            color: shapeColors[this.#clients.length % shapeColors.length]!
+        });
         client.room = this;
 
-        send({type: "roomSetup", admin: this.#admin.player.name, players: this.playerList(), roomId: this.#id, playerId: client.player.name}, client);
+        send({
+            type: "roomSetup",
+            admin: this.#admin.player.name,
+            players: this.playerList(),
+            roomId: this.#id,
+            playerId: client.player.name
+        }, client);
         this.broadcast({type: "playerChange", players: this.playerList()});
     }
 
@@ -97,10 +126,21 @@ class Room {
     }
 
     gameOver(reason: GameOverReason) {
-        if(this.#gameState.state !== "play") failAssert("No game active!");
+        if (this.#gameState.state !== "play") failAssert("No game active!");
         this.#gameState = {state: "end", boardHandler: this.#gameState.boardHandler, reason};
 
         this.broadcast({type: "gameEnd", board: this.#gameState.boardHandler.board, reason})
+    }
+
+    startGame() {
+        if (this.#gameState.state !== "wait") failAssert("Cannot start game!");
+        this.#gameState = {
+            state: "play",
+            turn: this.playerList()[0]!,
+            boardHandler: new BoardHandler(this.#settings.dimensionCount, this.#settings.sideLength)
+        }
+
+        this.broadcast({type: "nextTurn", nextPlayer: this.#gameState.turn, board: this.#gameState.boardHandler.board});
     }
 
     removeClient(client: Client) {
@@ -112,23 +152,36 @@ class Room {
         const playerShapes = this.#settings.playerShapes;
         client.room = null;
 
-        this.updateSettings({playerShapes: [...playerShapes.slice(0, clientIdx), ...playerShapes.slice(clientIdx+1),playerShapes[clientIdx]!]});
+        this.updateSettings({playerShapes: [...playerShapes.slice(0, clientIdx), ...playerShapes.slice(clientIdx + 1), playerShapes[clientIdx]!]});
 
-        if(this.#clients.length === 0) {
+        if (this.#clients.length === 0) {
             return "removeRoom";
         }
 
-        let newAdmin: string|undefined;
-        if(this.#admin === client) {
+        let newAdmin: string | undefined;
+        if (this.#admin === client) {
             this.#admin = this.#clients[0]!;
             newAdmin = this.#admin.player.name;
         }
 
-        if(this.#clients.length === 1 && this.#gameState.state === "play") {
+        if (this.#clients.length === 1 && this.#gameState.state === "play") {
             this.gameOver({type: "opponentsDisconnected"});
         }
 
         this.broadcast({type: "playerChange", players: this.playerList(), newAdmin});
+    }
+
+    place(pos: Vec): boolean {
+        if (this.#gameState.state !== "play") failAssert("No game active!");
+        assert.equal(this.#settings.dimensionCount, pos.size(), "incorrectly sized vector");
+        const boardHandler = this.#gameState.boardHandler;
+        if (boardHandler.getCell(pos) !== undefined) return false;
+        const playerList = this.playerList();
+        const playerIdx = playerList.indexOf(this.#gameState.turn);
+        boardHandler.setCell(pos, playerIdx);
+        this.#gameState.turn = playerList[(playerIdx + 1) % playerList.length]!;
+        this.broadcast({type: "nextTurn", nextPlayer: this.#gameState.turn, board: boardHandler.board});
+        return true;
     }
 
     broadcast(message: WsServerMessage) {
@@ -139,8 +192,12 @@ class Room {
 }
 
 function send(message: WsServerMessage, client: Client) {
-    logger.debug(`send message ${JSON.stringify(message)}`);
+    logger.debug(`send message ${JSON.stringify(message)} to ${client.id}`);
     client.socket.send(JSON.stringify(message));
+}
+
+function sendError(msg: string, client: Client) {
+    send({type: "error", msg}, client);
 }
 
 export class GameServer {
@@ -207,15 +264,15 @@ export class GameServer {
             case "joinRoom": {
                 const room = this.#rooms.get(msg.roomId);
                 if (room === undefined) {
-                    send({type: "error", msg: "Room does not exist"}, client);
+                    sendError("Room does not exist", client);
                     return;
                 }
                 if (!room.isNameAvailable(msg.playerName)) {
-                    send({type: "error", msg: "Name already in use"}, client);
+                    sendError("Name already in use", client);
                     return;
                 }
-                if(!room.isEditable()) {
-                    send({type: "error", msg: "Room already in game"},client);
+                if (!room.isEditable()) {
+                    sendError("Room already in game", client);
                     return;
                 }
                 client.player.name = msg.playerName;
@@ -223,8 +280,8 @@ export class GameServer {
                 break;
             }
             case "createRoom": {
-                if(!(msg.playerName.length > 0)) {
-                    send({type: "error", msg: "Name is empty"}, client);
+                if (!(msg.playerName.length > 0)) {
+                    sendError("Name is empty", client);
                     return;
                 }
                 client.player.name = msg.playerName;
@@ -233,8 +290,8 @@ export class GameServer {
             }
             case "leaveRoom": {
                 if (client.room === null)
-                    failAssert("Client not in a room");
-                if(client.room.removeClient(client) === "removeRoom"){
+                    return sendError("Not in a room", client);
+                if (client.room.removeClient(client) === "removeRoom") {
                     this.#rooms.delete(client.room.id());
                     logger.debug(`Removing room ${client.room.id()}`)
                 }
@@ -242,28 +299,59 @@ export class GameServer {
             }
             case "selectShape": {
                 if (client.room === null)
-                    failAssert("Client not in a room");
-                if(!client.room.isEditable()) {
-                    return send({type: "error", msg: "Cannot change your shape once game has started"}, client);
+                    return sendError("Not in a room", client);
+
+                if (!client.room.isEditable()) {
+                    return sendError("Cannot change your shape once game has started", client);
                 }
                 client.room.editPlayerShape(client, msg.shape);
                 break;
             }
             case "editSettings":
-                if(client.room === null)
-                    failAssert("Client not in a room");
+                if (client.room === null)
+                    return sendError("Not in a room", client);
 
-                if(client.room.admin() !== client) {
-                    return send({type: "error", msg: "Only admin can change settings"}, client);
+                if (client.room.admin() !== client) {
+                    return sendError("Only admin can change settings", client);
                 }
 
-                if(!client.room.isEditable()) {
-                    return send({type: "error", msg: "Cannot change settings once game has started"}, client);
+                if (!client.room.isEditable()) {
+                    return sendError("Cannot change settings once game has started", client);
                 }
 
                 client.room.updateSettings(msg);
 
                 break;
+            case "place": {
+                const room = client.room;
+                if (room === null)
+                    return sendError("Not in a room", client);
+
+                if (room.state() !== "play") {
+                    return sendError("Can only place during active game", client);
+                }
+
+                if (client.player.name !== room.currentTurn()) {
+                    return sendError("Not your turn", client);
+                }
+
+                if (!room.place(new Vec(msg.position)))
+                    return sendError("Cell not empty", client);
+                break;
+            }
+            case "startGame": {
+                const room = client.room;
+                if (room === null)
+                    return sendError("Not in a room", client);
+
+                if (room.state() !== "wait")
+                    return sendError( "Cannot start game", client);
+
+                if (room.playerCount() !== 2)
+                    return sendError("Cannot start game without 2 players", client);
+
+                room.startGame();
+            }
         }
     }
 }

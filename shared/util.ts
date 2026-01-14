@@ -32,8 +32,10 @@ export function repeat_v<T>(value: T, count: number): Iterable<T> {
     }
 }
 
-export function* map<Input, Result>(data: Iterable<Input>, fn: (item: Input) => Result) {
+export function* map<Input, Result>(data: Iterable<Input>, fn: (item: Input, idx: number) => Result) {
+    let idx = 0;
     for(const el of data) {
-        yield fn(el);
+        yield fn(el, idx);
+        idx++;
     }
 }

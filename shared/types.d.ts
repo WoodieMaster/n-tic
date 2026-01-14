@@ -61,7 +61,7 @@ export type WsClientMessage = {
     type: "startGame"
 } | {
     type: "place",
-    position: BoardVector
+    position: Tuple<number, number>
 }
 
 export interface Player {

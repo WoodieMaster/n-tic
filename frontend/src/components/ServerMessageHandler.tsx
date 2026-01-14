@@ -9,9 +9,11 @@ const ServerMessageHandler = () => {
     const {registerMessageHandler, removeMessageHandler} = useConnection();
     const {updateGameSettings} = useGameSettings();
     const {updateRoomState, playerId, players} = useRoomState();
-    const {updateGameState} = useGameState();
+    const {updateGameState, state} = useGameState();
 
+    console.log("handler render",{players});
     useEffect(() => {
+        console.log("handler effect", {players});
         const handler = (e: ServerMessageEvent) => {
             const message = e.message;
 
@@ -27,7 +29,8 @@ const ServerMessageHandler = () => {
                     updateGameState({state: "wait"})
                     break;
                 case "nextTurn":
-                    updateGameState({board: message.board, currentPlayerIdx: players.indexOf(message.nextPlayer)});
+                    console.log("Next turn msg: ", {players, nextPlayer: message.nextPlayer});
+                    updateGameState({board: message.board, currentPlayerIdx: players.indexOf(message.nextPlayer), state: "play"});
                     break;
                 case "roomSettings":
                     updateGameSettings(message);
@@ -59,7 +62,7 @@ const ServerMessageHandler = () => {
         registerMessageHandler(handler);
 
         return () => removeMessageHandler(handler);
-    }, []);
+    }, [players, playerId]);
 
 
     return <></>;

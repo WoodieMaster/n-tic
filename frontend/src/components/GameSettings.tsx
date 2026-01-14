@@ -6,7 +6,6 @@ import SettingSlider from "./SettingSlider.tsx";
 import ShapeSelector from "./ShapeSelector.tsx";
 import useGameSettings from "../stores/useGameSettings.ts";
 import useRoomState from "../stores/useRoomState.ts";
-import {useEffect, useMemo} from "react";
 import useConnection from "../stores/useConnection.ts";
 import useGameState from "../stores/useGameState.ts";
 import useDefer from "../hooks/useDefer.ts";
@@ -17,11 +16,11 @@ const settingUpdateTimeout = 500;
 const GameSettings = () => {
     const {playerShapes, dimensionCount, sideLength, updateGameSettings, updatePlayerShape} = useGameSettings();
     const {players, playerId: selfPlayerName, admin} = useRoomState();
-    const {state: gameState} = useGameState();
+    const {state: gameState, currentPlayerIdx} = useGameState();
     const {sendMessage} = useConnection();
     const deferSettingUpdate = useDefer();
 
-    console.debug("render settings: ", {gameState, selfPlayerName, admin, playerShapes, dimensionCount, sideLength, players});
+    console.debug("render settings: ", {gameState, selfPlayerName, currentPlayerIdx, admin, playerShapes, dimensionCount, sideLength, players});
 
     function updateSettings(settings: Partial<RoomSettings>) {
         updateGameSettings(settings);

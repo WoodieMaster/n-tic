@@ -2,7 +2,7 @@ import {Canvas} from "@react-three/fiber"
 import {OrbitControls, Svg} from "@react-three/drei"
 import ShapeRenderer from "./ShapeRender.tsx";
 import {renderToString} from "react-dom/server";
-import {type JSX, type ReactElement, useMemo, useRef, useState} from "react";
+import {Fragment, type JSX, useMemo, useRef, useState} from "react";
 import {Box, Button, Stack, Typography} from "@mui/material";
 import type {OrbitControls as OrbitControlsImpl} from "three-stdlib"
 import {Vec} from "../../../shared/vec.ts";
@@ -85,11 +85,11 @@ function Canvas2D(p: { viewStart: Vec, selectedDimensions: Tuple<number, 2>, sid
 
     if(state === "wait") grid = [];
     else
-        grid = Array.from(map(boardArea, ([gridPos, inViewPosition]) => {
+        grid = Array.from(map(boardArea, ([gridPos, inViewPosition], idx) => {
             const cell = board[gridPos.toKeyString()];
 
             if (cell === undefined) return state === "play" && selfPlayerIdx === currentPlayerIdx? <EmptyCell2D inViewPosition={inViewPosition} key={gridPos.toKeyString()}
-                                                        onClick={() => updateBoardCell(gridPos)}/>: <></>;
+                                                        onClick={() => updateBoardCell(gridPos)}/>: <Fragment key={idx}></Fragment>;
 
             const svg = renderToString(<ShapeRenderer mode={"2D"} size={0} shape={playerShapes[cell]}/>);
             return <Cell2D svg={svg} inViewPosition={inViewPosition} key={gridPos.toKeyString()}/>

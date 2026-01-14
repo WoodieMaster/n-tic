@@ -1,6 +1,5 @@
 import type {Board} from "./types.d.ts";
-import {Vec, type VecDirection} from "./vec.js";
-
+import {Vec, type VecDirection} from "./vec.ts";
 
 export class BoardHandler {
     board: Board;
