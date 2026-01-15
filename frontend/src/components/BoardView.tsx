@@ -13,6 +13,7 @@ import useGameSettings from "../stores/useGameSettings.ts";
 import useGameState from "../stores/useGameState.ts";
 import * as React from "react";
 import useRoomState from "../stores/useRoomState.ts";
+import useConnection from "../stores/useConnection.ts";
 
 
 interface Props {
@@ -24,10 +25,10 @@ interface Props {
 const fov = 50;
 const fovRadians = Math.PI / 180 * fov;
 const BoardView = (p: Props) => {
-    const {sideLength} = useGameSettings();
-    const [viewStart, setViewStart] = useState(p.defaultViewStart ?? Vec.zero(sideLength));
+    const {dimensionCount} = useGameSettings();
+    const [viewStart, setViewStart] = useState(p.defaultViewStart ?? Vec.zero(dimensionCount));
     const [selectedDimensions, setSelectedDimensions] = useState(p.defaultSelectedDimensions ?? [0, 1] as Tuple<number, 2 | 3>);
-    const [viewSideLength, setViewSideLength] = useState(p.defaultSideLength ?? 8);
+    const [viewSideLength, setViewSideLength] = useState(p.defaultSideLength ?? 3);
     const controlsRef = useRef<OrbitControlsImpl>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -77,6 +78,7 @@ function Canvas2D(p: { viewStart: Vec, selectedDimensions: Tuple<number, 2>, sid
     const {playerShapes} = useGameSettings();
     const {updateBoardCell, board, state, currentPlayerIdx} = useGameState();
     const {players, playerId} = useRoomState();
+    const {sendMessage} = useConnection();
     const selfPlayerIdx = useMemo(() => players.indexOf(playerId), [playerId, players]);
     const boardArea = getBoardArea(p.viewStart, p.selectedDimensions, p.sideLength);
 
@@ -89,7 +91,10 @@ function Canvas2D(p: { viewStart: Vec, selectedDimensions: Tuple<number, 2>, sid
             const cell = board[gridPos.toKeyString()];
 
             if (cell === undefined) return state === "play" && selfPlayerIdx === currentPlayerIdx? <EmptyCell2D inViewPosition={inViewPosition} key={gridPos.toKeyString()}
-                                                        onClick={() => updateBoardCell(gridPos)}/>: <Fragment key={idx}></Fragment>;
+                                                        onClick={() => {
+                                                            updateBoardCell(gridPos);
+                                                            sendMessage({type: "place", position: gridPos.toTuple()})
+                                                        }}/>: <Fragment key={idx}></Fragment>;
 
             const svg = renderToString(<ShapeRenderer mode={"2D"} size={0} shape={playerShapes[cell]}/>);
             return <Cell2D svg={svg} inViewPosition={inViewPosition} key={gridPos.toKeyString()}/>

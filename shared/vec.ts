@@ -104,4 +104,8 @@ export class Vec<Length extends number = number, Item extends number = number> {
     clone(): this {
         return new Vec<Length, Item>(this.#arr) as this;
     }
+
+    toTuple(): Tuple<Item, Length> {
+        return [...this.#arr] as Tuple<Item, Length>;
+    }
 }

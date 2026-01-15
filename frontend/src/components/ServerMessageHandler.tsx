@@ -9,7 +9,7 @@ const ServerMessageHandler = () => {
     const {registerMessageHandler, removeMessageHandler} = useConnection();
     const {updateGameSettings} = useGameSettings();
     const {updateRoomState, playerId, players} = useRoomState();
-    const {updateGameState, state} = useGameState();
+    const {updateGameState} = useGameState();
 
     useEffect(() => {
         const handler = (e: ServerMessageEvent) => {
