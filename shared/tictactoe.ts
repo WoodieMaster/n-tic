@@ -1,8 +1,13 @@
 import type {Board} from "./types.d.ts";
 import {Vec, type VecDirection} from "./vec.ts";
+import {AssertionError} from "node:assert";
 
 type GameResult = { type: "tie" }
     | { type: "win", playerIdx: number, start: Vec, direction: VecDirection }
+
+function failAssert(msg: string) {
+    throw new AssertionError({message: msg});
+}
 
 export class BoardHandler {
     board: Board;
@@ -19,7 +24,7 @@ export class BoardHandler {
 
     #assertPos(pos: Vec) {
         if (pos.size() !== this.dimensions) {
-            throw "Invalid dimension count in position";
+            failAssert("Invalid dimension count in position");
         }
     }
 
@@ -30,7 +35,7 @@ export class BoardHandler {
 
     #assertBounds(pos: Vec) {
         if (!this.inBound(pos)) {
-            throw "Position out of bounds"
+            failAssert(`Position ${pos.toKeyString()} out of bounds ${Vec.from(this.sideLength, this.dimensions)}`);
         }
     }
 
@@ -105,7 +110,7 @@ export class BoardHandler {
  */
 function checkVectorIsOnFullDiagonal(vec: VecDirection, position: Vec, sidelength: number): boolean {
     if (!vec.comparable(position)) {
-        throw `vector and position do not have the same length ${vec.size()}, ${position.size()}`;
+        failAssert(`vector and position do not have the same length ${vec.size()}, ${position.size()}`);
     }
     let expectedEdgeDistance = null;
 
