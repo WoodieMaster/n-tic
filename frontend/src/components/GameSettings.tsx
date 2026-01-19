@@ -61,7 +61,7 @@ const GameSettings = () => {
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={settingDisabled}
+                disabled={selfPlayerName !== admin || gameState === "play"}
                 onClick={() => sendMessage({type: "startGame"})}
             >Start Game</Button>
             <Stack spacing={2} sx={{bgcolor: "rgba(0,0,0,0.1)", height: "100%", padding: 3}}>
