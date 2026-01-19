@@ -55,7 +55,7 @@ export class BoardHandler {
     }
 
     totalCellCount(): number {
-        return this.sideLength * this.dimensions;
+        return Math.pow(this.sideLength, this.dimensions);
     }
 
     occupiedCellCount(): number {
