@@ -44,10 +44,6 @@ class Room {
         state: "play",
         turn: string,
         boardHandler: BoardHandler;
-    } | {
-        state: "end",
-        boardHandler: BoardHandler;
-        reason: GameOverReason,
     } = {state: "wait"};
 
     constructor(roomId: string, admin: Client) {
@@ -130,13 +126,13 @@ class Room {
 
     gameOver(reason: GameOverReason) {
         if (this.#gameState.state !== "play") failAssert("No game active!");
-        this.#gameState = {state: "end", boardHandler: this.#gameState.boardHandler, reason};
-
         this.broadcast({type: "gameEnd", board: this.#gameState.boardHandler.board, reason})
+
+        this.#gameState = {state: "wait"};
     }
 
     startGame() {
-        if (this.#gameState.state !== "wait") failAssert("Cannot start game!");
+        if (this.#gameState.state === "play") failAssert("Cannot start game!");
         this.#gameState = {
             state: "play",
             turn: this.playerList()[0]!,
@@ -365,7 +361,7 @@ export class GameServer {
                     if (room === null)
                         return sendError("Not in a room", client);
 
-                    if (room.state() !== "wait")
+                    if (room.state() === "play")
                         return sendError( "Cannot start game", client);
 
                     if (room.playerCount() !== 2)
