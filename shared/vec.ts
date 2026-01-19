@@ -20,11 +20,12 @@ export class Vec<Length extends number = number, Item extends number = number> {
 
     add(this: Vec, vec: Vec<Length, Item>) {
         assert.ok(this.comparable(vec), "vecs not compatible");
+        const newVec = this.clone();
         for(let i = 0; i < vec.#arr.length; i++) {
-            this.#arr[i]! += vec.#arr[i]!;
+            newVec.#arr[i]! += vec.#arr[i]!;
         }
 
-        return this;
+        return newVec;
     }
 
     map<RItem extends number>(fn: (item: Item, idx: number) => RItem) {
@@ -34,30 +35,6 @@ export class Vec<Length extends number = number, Item extends number = number> {
             arr[i] = fn(arr[i] as Item, i);
         }
         return new_vec as Vec<Length, RItem>;
-    }
-
-    add_scalar(this: Vec, n: Item) {
-        for(let i = 0; i < this.#arr.length; i++) {
-            this.#arr[i]! += n;
-        }
-
-        return this;
-    }
-
-    flip_values(this: Vec) {
-        for(let i = 0; i < this.#arr.length; i++) {
-            this.#arr[i]! = -this.#arr[i]!;
-        }
-
-        return this;
-    }
-
-    scale(this: Vec, m: number) {
-        for(let i = 0; i < this.#arr.length; i++) {
-            this.#arr[i]! = -this.#arr[i]!;
-        }
-
-        return this;
     }
 
     get(idx: number) {
@@ -85,21 +62,11 @@ export class Vec<Length extends number = number, Item extends number = number> {
         return new_vec;
     }
 
-    multiply(this: Vec,vec: Vec<Length>) {
-        assert.ok(this.comparable(vec), "vecs not compatible");
-        for(let i = 0; i < this.#arr.length; i++) {
-            this.#arr[i]! *= vec.#arr[i]!;
-        }
-
-        return this;
-    }
-
     toKeyString() {
         return this.#arr.map(n => n.toString(36)).join(",")
     }
 
     static zero<Length extends number>(length: Length) { return Vec.from(0, length); }
-
 
     clone(): this {
         return new Vec<Length, Item>(this.#arr) as this;

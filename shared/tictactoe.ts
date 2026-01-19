@@ -79,21 +79,22 @@ export class BoardHandler {
 
             // Direction valid for win
 
-            let checkStartPosition = changedPosition.map((v, i) => {
+            let checkPosition = changedPosition.map((v, i) => {
                 if (checkVec.get(i) === 1) return 0;
                 if (checkVec.get(i) === -1) return this.sideLength - 1;
                 return v
             });
 
             for (let i = 0; i < this.sideLength; i++) {
-                if (this.getCell(checkStartPosition.add(checkVec)) !== expectedCell) {
+                if (this.getCell(checkPosition) !== expectedCell) {
                     // Direction contains different cell
                     continue outer;
                 }
+                checkPosition = checkPosition.add(checkVec);
             }
 
             // Direction has all equal cells -> win
-            return {type: "win", playerIdx: expectedCell, start: checkStartPosition, direction: checkVec};
+            return {type: "win", playerIdx: expectedCell, start: checkPosition, direction: checkVec};
         }
 
         if (this.totalCellCount() <= this.occupiedCellCount()) return {type: "tie"}
