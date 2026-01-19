@@ -176,14 +176,27 @@ class Room {
 
     place(pos: Vec): boolean {
         if (this.#gameState.state !== "play") failAssert("No game active!");
+
         assert.equal(this.#settings.dimensionCount, pos.size(), "incorrectly sized vector");
+
         const boardHandler = this.#gameState.boardHandler;
+
         if (boardHandler.getCell(pos) !== undefined) return false;
+
         const playerList = this.playerList();
         const playerIdx = playerList.indexOf(this.#gameState.turn);
+
         boardHandler.setCell(pos, playerIdx);
+
         this.#gameState.turn = playerList[(playerIdx + 1) % playerList.length]!;
-        this.broadcast({type: "nextTurn", nextPlayer: this.#gameState.turn, board: boardHandler.board});
+
+        const turnResult = boardHandler.checkWinForChangedPosition(pos);
+        if(turnResult === null)
+            this.broadcast({type: "nextTurn", nextPlayer: this.#gameState.turn, board: boardHandler.board});
+        else if (turnResult.type === "tie")
+            this.gameOver({type: "tie"});
+        else
+            this.gameOver({type: "board", winner: playerList[turnResult.playerIdx]!, winPosition: turnResult.start, winVec: turnResult.direction})
         return true;
     }
 

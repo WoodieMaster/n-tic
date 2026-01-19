@@ -1,4 +1,5 @@
 import {shapeColors, type shapeTypes} from "./shapes.js";
+import type {Vec, VecDirection} from "./vec.ts";
 
 export type WsServerMessage = {
     type: "playerChange",
@@ -29,8 +30,8 @@ export type WsServerMessage = {
 
 export type GameOverReason = {
     type: "board",
-    winVec: BoardDirection,
-    winPosition: BoardVector,
+    winVec: VecDirection,
+    winPosition: Vec,
     winner: string
 } | {
     type: "opponentsDisconnected"

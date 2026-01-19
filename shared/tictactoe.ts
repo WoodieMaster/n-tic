@@ -1,6 +1,9 @@
 import type {Board} from "./types.d.ts";
 import {Vec, type VecDirection} from "./vec.ts";
 
+type GameResult = { type: "tie" }
+    | { type: "win", playerIdx: number, start: Vec, direction: VecDirection }
+
 export class BoardHandler {
     board: Board;
     readonly dimensions: number;
@@ -11,7 +14,7 @@ export class BoardHandler {
         this.dimensions = dimensions;
         this.sideLength = sideLength;
         this.board = board;
-        this.emptyPos = Vec.from(0, sideLength);
+        this.emptyPos = Vec.from(0, dimensions);
     }
 
     #assertPos(pos: Vec) {
@@ -46,10 +49,19 @@ export class BoardHandler {
         return this.board[pos.toKeyString()];
     }
 
-    checkWinForChangedPosition(changedPosition: Vec): number | undefined {
+    totalCellCount(): number {
+        return this.sideLength * this.dimensions;
+    }
+
+    occupiedCellCount(): number {
+        return Object.getOwnPropertyNames(this.board).length;
+    }
+
+    checkWinForChangedPosition(changedPosition: Vec): GameResult | null {
         let checkVec: VecDirection = this.emptyPos.clone();
         let expectedCell = this.getCell(changedPosition);
 
+        if (expectedCell === undefined) return null;
 
         outer: while (true) {
             // go through all possible directions
@@ -61,7 +73,6 @@ export class BoardHandler {
             checkVec = newCheckVec;
 
             // Direction valid for win
-
 
             let checkStartPosition = changedPosition.map((v, i) => {
                 if (checkVec.get(i) === 1) return 0;
@@ -77,9 +88,11 @@ export class BoardHandler {
             }
 
             // Direction has all equal cells -> win
-            return expectedCell;
+            return {type: "win", playerIdx: expectedCell, start: checkStartPosition, direction: checkVec};
         }
-        return;
+
+        if (this.totalCellCount() <= this.occupiedCellCount()) return {type: "tie"}
+        return null;
     }
 }
 
@@ -91,8 +104,8 @@ export class BoardHandler {
  * @param sidelength
  */
 function checkVectorIsOnFullDiagonal(vec: VecDirection, position: Vec, sidelength: number): boolean {
-    if(!vec.comparable(position)) {
-        throw "vector and position do not have the same length";
+    if (!vec.comparable(position)) {
+        throw `vector and position do not have the same length ${vec.size()}, ${position.size()}`;
     }
     let expectedEdgeDistance = null;
 
