@@ -42,7 +42,7 @@ const ServerMessageHandler = () => {
                             toast.success("You won! (Opponent disconnected");
                             break;
                         case "tie":
-                            toast.custom("Tie");
+                            toast.success("Tie", {icon: null})
                             break;
                         case "board":
                             if (message.reason.winner === playerId) {
